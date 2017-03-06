@@ -2,7 +2,13 @@ $(document).ready(function() {
   //
   // Check if authorized.
   //
-  // Trello.authorized()
+  if (!Trello.authorized()) {
+    $('.authenticate')
+      .removeClass('hide')
+      .on('click', () => {
+        Trello.authorize();
+      });
+  }
 
   //
   // Log out.
