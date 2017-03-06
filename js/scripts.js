@@ -3,10 +3,26 @@ $(document).ready(function() {
   // Check if authorized.
   //
   if (!Trello.authorized()) {
+    let authenticationSuccess = () => {
+      console.log('Trello authentication success!');
+    }
+    let authenticationFailure = () => {
+      console.log('Trello authentication failure!');
+    }
+
     $('.authenticate')
       .removeClass('hide')
       .on('click', () => {
-        Trello.authorize();
+        Trello.authorize({
+          type: 'popup',
+          name: 'Trello Meal Planner',
+          scope: {
+            read: 'true',
+            write: 'true' },
+          expiration: 'never',
+          success: authenticationSuccess,
+          error: authenticationFailure
+        });
       });
   }
 
