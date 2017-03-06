@@ -43,7 +43,7 @@ $(document).ready(function() {
   //
   // Check if board exists.
   //
-  boardExists() => {
+  function boardExists() {
     return false;
   };
 
