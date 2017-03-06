@@ -24,8 +24,13 @@ $(document).ready(function() {
         });
       });
   }
-  else {
+  else if (!boardExists()) {
     $('.authenticate').addClass('hide');
+    $('.create-board').removeClass('hide');
+  }
+  else {
+    $('.create-board').addClass('hide');
+    $('.has-board').removeClass('hide');
   }
 
   //
@@ -38,10 +43,20 @@ $(document).ready(function() {
   //
   // Check if board exists.
   //
+  boardExists() => {
+    return false;
+  };
 
   //
   // Create board.
   //
+  $('.create-board__link').on('click', () => {
+    // Create board API call.
+
+    // On success:
+    $('.create-board').addClass('hide');
+    $('.has-board').removeClass('hide');
+  });
 
   //
   // Retrieve list.
