@@ -5,14 +5,13 @@ $(document).ready(function() {
   if (!Trello.authorized()) {
     let authenticationSuccess = () => {
       console.log('Trello authentication success!');
+      $('.authenticate').addClass('hide');
     }
     let authenticationFailure = () => {
       console.log('Trello authentication failure!');
     }
 
-    $('.authenticate')
-      .removeClass('hide')
-      .on('click', () => {
+    $('.authenticate__link').on('click', () => {
         Trello.authorize({
           type: 'popup',
           name: 'Trello Meal Planner',
@@ -24,6 +23,9 @@ $(document).ready(function() {
           error: authenticationFailure
         });
       });
+  }
+  else {
+    $('.authenticate').addClass('hide');
   }
 
   //

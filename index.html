@@ -13,15 +13,18 @@
     <main>
       <div class="card">
         <div class="card__inner">
-          <div class="card-content">
-
-            <a class="waves-effect waves-light btn authenticate hide">Autenticate</a>
-
+          <div class="card-content center-align">
             <h1 class="page-title">Trello Meal Planner</h1>
-            <p>It looks like you don't have a Trello Meal Planning board yet. Create one now?</p>
-            <a class="waves-effect waves-light btn">Create new board</a>
+            <div class="authenticate is-not-authenticated">
+              <p class="authenticate__text">In order to use this app you need to authenticate with Trello.</p>
+              <a class="waves-effect waves-light btn btn-large authenticate__link">Authenticate <img class="button-icon-trello" src="images/trello-mark-white.svg" /></a>
+            </div>
+            <div class="create-board is-authenticated has-no-board hide">
+              <p class="create-board__text">It looks like you don't have a Trello Meal Planning board yet. Create one now?</p>
+              <a class="waves-effect waves-light btn btn-large create-board__link">Create new board</a>
+            </div>
           </div>
-          <div class="card-content">
+          <div class="card-content is-authenticated has-board hide">
             <form action="#">
               <h2 class="list-title">Recipes in this shopping list</h2>
               <div class="collection">
@@ -89,7 +92,7 @@
             </form>
           </div>
 
-          <div class="card-action">
+          <div class="card-action is-authenticated hide">
             <ul>
               <li class="right-align">
                 <a class="waves-effect waves-light btn">Open board <img class="button-icon-trello" src="images/trello-mark-white.svg" /></a>
@@ -111,7 +114,7 @@
                 </div>
               </li>
               <li class="right-align">
-                <a class="waves-effect waves-light btn log-out">Log out</a>
+                <a class="waves-effect waves-light btn log-out is-authenticated">Log out</a>
               </li>
             </ul>
           </div>
