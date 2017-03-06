@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Trello Meal Planner</title>
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <div class="card__inner">
+          <div class="card-content">
+            <h1 class="page-title">Trello Meal Planner</h1>
+            <p>It looks like you don't have a Trello Meal Planning board yet. Create one now?</p>
+            <a class="waves-effect waves-light btn">Create new board</a>
+          </div>
+          <div class="card-content">
+            <form action="#">
+              <h2 class="list-title">Recipes in this shopping list</h2>
+              <div class="collection">
+                <a href="#!" class="collection-item">Tomato soup</a>
+                <a href="#!" class="collection-item">Sheppard's pie</a>
+              </div>
+              <h2 class="list-title">Things you probably already have on hand</h2>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-1" />
+                <label for="item-1">2 Large carrots</label>
+              </div>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-2" />
+                <label for="item-2">2 Large carrots</label>
+              </div>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-1" />
+                <label for="item-1">2 Large carrots</label>
+              </div>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-2" />
+                <label for="item-2">2 Large carrots</label>
+              </div>
+              <h2 class="list-title">Fresh produce</h2>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-1" />
+                <label for="item-1">2 Large carrots</label>
+              </div>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-2" />
+                <label for="item-2">2 Large carrots</label>
+              </div>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-1" />
+                <label for="item-1">2 Large carrots</label>
+              </div>
+              <div>
+                <input type="checkbox" class="filled-in" id="item-2" />
+                <label for="item-2">2 Large carrots</label>
+              </div>
+            </form>
+
+            <form action="#">
+              <h2 class="list-title">Extra items</h2>
+              <div class="extra-items__list">
+                <div class="extra-items__checklist">
+                  <div>
+                    <input type="checkbox" class="filled-in" id="item-1" />
+                    <label for="item-1">Extra item 1</label>
+                  </div>
+                  <div>
+                    <input type="checkbox" class="filled-in" id="item-2" />
+                    <label for="item-2">Extra item 2</label>
+                  </div>
+                </div>
+                <a class="extra-items__edit waves-effect waves-light btn">Edit</a>
+              </div>
+              <div class="extra-items__input hide">
+                <div class="input-field">
+                  <textarea id="extra-items__textarea" class="materialize-textarea" placeholder="Extra item"></textarea>
+                </div>
+                <a class="extra-items__cancel waves-effect waves-light btn grey">Cancel</a>
+                <a class="extra-items__save waves-effect waves-light btn">Save</a>
+              </div>
+            </form>
+          </div>
+
+          <div class="card-action">
+            <ul>
+              <li class="right-align">
+                <a class="waves-effect waves-light btn">Open board <img class="button-icon-trello" src="images/trello-mark-white.svg" /></a>
+              </li>
+              <li class="right-align">
+                <!-- Modal Trigger -->
+                <a class="modal-trigger waves-effect waves-light btn reset-board" href="#modal1">Reset Board & Shopping List</a>
+
+                <!-- Modal Structure -->
+                <div id="modal1" class="modal">
+                  <div class="modal-content">
+                    <h4>Reset Board & Shopping List?</h4>
+                    <p>This action will move all recipe cards back into the recipe column, and clear the shopping list (except the Extra Items).</p>
+                  </div>
+                  <div class="modal-footer">
+                    <a href="#!" class="modal-action modal-close waves-effect waves-red btn btn-flat modal-cancel">Cancel</a>
+                    <a href="#!" class="modal-action modal-close waves-effect waves-green btn btn-flat modal-reset">Reset</a>
+                  </div>
+                </div>
+              </li>
+              <li class="right-align">
+                <a class="waves-effect waves-light btn log-out">Log out</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+    <script src="https://trello.com/1/client.js?key=caf98b855b223644b58b7916f7649bca"></script>
+    <script type="text/javascript" src="js/scripts.js"></script>
+  </body>
+</html>
