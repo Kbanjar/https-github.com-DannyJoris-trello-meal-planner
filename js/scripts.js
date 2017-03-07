@@ -26,6 +26,7 @@ $(document).ready(function() {
             read: 'true',
             write: 'true' },
           expiration: 'never',
+          persist: true,
           success: authenticationSuccess,
           error: authenticationFailure
         });
