@@ -81,23 +81,8 @@ $(document).ready(function() {
   //
   $('.log-out').on('click', () => {
     Trello.deauthorize();
-    $('.is-authenticated').addClass('hide');
-    $('.authenticate').removeClass('hide');
+    openAuthenticate();
   });
-
-  //
-  // Check if board exists.
-  //
-  function boardExists() {
-    // Check localStorage for boardID. In this case the user can re-name the
-    // Meal Planner board, and still be identified.
-    if (localStorage.getItem('boardID')) {
-      return true;
-    }
-    // If not found check boards with the title "Meal Planner".
-
-    return false;
-  };
 
   //
   // Create board.
@@ -106,17 +91,50 @@ $(document).ready(function() {
     // Create board API call.
     Trello.post('/boards', {
       name: 'Meal Planner',
-      defaultLabels: false
-    }).done((responseText) => {
-      console.log('responseText', responseText);
-      // On success:
-      $('.create-board').addClass('hide');
-      $('.has-board').removeClass('hide');
+      defaultLabels: false,
+      defaultLists: false
+    }).done((response) => {
+      console.log('Board created');
+      localStorage.setItem('boardID', response.id);
+      let labels = [
+        {color: 'green', name: 'Baked goods'},
+        {color: 'yellow', name: 'Breakfast'},
+        {color: 'orange', name: 'Lunch'},
+        {color: 'red', name: 'Mains'},
+        {color: 'purple', name: 'Dessert'},
+        {color: 'blue', name: 'Dips, dressings & sauces'},
+        {color: 'sky', name: 'Soups & stews'},
+        {color: 'lime', name: 'Salads & sides'},
+        {color: 'pink', name: 'Drinks'},
+        {color: 'black', name: 'Other'}
+      ];
+      let lists = [
+        {name: "Recipes", pos: 1},
+        {name: "Monday", pos: 2},
+        {name: "Tuesday", pos: 3},
+        {name: "Wednesday", pos: 4},
+        {name: "Thursday", pos: 5},
+        {name: "Friday", pos: 6},
+        {name: "Saturday", pos: 7},
+        {name: "Sunday", pos: 8},
+      ];
+      let deferreds = [];
+      // Add labels.
+      $.each(labels, (key, label) => {
+        deferreds.push(Trello.post(`/boards/${response.id}/labels`, {color: label.color, name: label.name}));
+      });
+      // Add lists.
+      $.each(lists, (key, list) => {
+        deferreds.push(Trello.post(`/boards/${response.id}/lists`, {name: list.name, pos: list.pos}));
+      });
+
+      // Apply all the deferred promises.
+      $.when.apply($, deferreds).done(() => {
+        console.log('Labels & lists added');
+
+        openHasBoard();
+      });
     });
-
-
-
-
   });
 
   //
