@@ -18,7 +18,7 @@ $(document).ready(function() {
   //
   let appInit = () => {
     if (!Trello.authorized()) {
-      $('.is-not-authenticated').removeClass('hide');
+      $('.authenticate').removeClass('hide');
       let authenticationSuccess = () => {
         $('.authenticate').addClass('hide');
         if (!boardExists()) {
@@ -30,7 +30,7 @@ $(document).ready(function() {
         }
       }
       let authenticationFailure = () => {
-        console.log('Trello authentication failure!');
+        console.log('Trello authentication failed!');
       }
       $('.authenticate__link').on('click', () => {
           Trello.authorize({
@@ -62,7 +62,7 @@ $(document).ready(function() {
   $('.log-out').on('click', () => {
     Trello.deauthorize();
     $('.is-authenticated').addClass('hide');
-    $('.is-not-authenticated').removeClass('hide');
+    $('.authenticate').removeClass('hide');
   });
 
   //
