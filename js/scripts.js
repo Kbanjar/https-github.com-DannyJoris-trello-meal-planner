@@ -69,6 +69,13 @@ $(document).ready(function() {
   // Check if board exists.
   //
   function boardExists() {
+    // Check localStorage for boardID. In this case the user can re-name the
+    // Meal Planner board, and still be identified.
+    if (localStorage.getItem('boardID')) {
+      return true;
+    }
+    // If not found check boards with the title "Meal Planner".
+
     return false;
   };
 
@@ -77,10 +84,19 @@ $(document).ready(function() {
   //
   $('.create-board__link').on('click', () => {
     // Create board API call.
+    Trello.post('/boards', {
+      name: 'Meal Planner',
+      defaultLabels: false
+    }).done((responseText) => {
+      console.log('responseText', responseText);
+      // On success:
+      $('.create-board').addClass('hide');
+      $('.has-board').removeClass('hide');
+    });
 
-    // On success:
-    $('.create-board').addClass('hide');
-    $('.has-board').removeClass('hide');
+
+
+
   });
 
   //
