@@ -18,8 +18,8 @@ $(document).ready(function() {
   //
   let appInit = () => {
     if (!Trello.authorized()) {
+      $('.is-not-authenticated').removeClass('hide');
       let authenticationSuccess = () => {
-        console.log('Trello authentication success!');
         $('.authenticate').addClass('hide');
         if (!boardExists()) {
           $('.create-board').removeClass('hide');
@@ -32,7 +32,6 @@ $(document).ready(function() {
       let authenticationFailure = () => {
         console.log('Trello authentication failure!');
       }
-
       $('.authenticate__link').on('click', () => {
           Trello.authorize({
             type: 'popup',
