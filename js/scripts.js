@@ -1,46 +1,61 @@
 $(document).ready(function() {
+
+  // Include Trello client script.
+  let trelloClient = 'https://trello.com/1/client.js?key=caf98b855b223644b58b7916f7649bca';
+  if (localStorage.getItem('trello_token')) {
+    trelloClient += `&token=${localStorage.getItem('trello_token')}`;
+  }
+  $.getScript(trelloClient)
+    .done(( script, textStatus ) => {
+      appInit();
+    })
+    .fail(( jqxhr, settings, exception ) => {
+      console.error('Failed to load Trello client.');
+    });
+
   //
   // Check if authorized.
   //
-  if (!Trello.authorized()) {
-    let authenticationSuccess = () => {
-      console.log('Trello authentication success!');
-      $('.authenticate').addClass('hide');
-      if (!boardExists()) {
-        $('.create-board').removeClass('hide');
+  let appInit = () => {
+    if (!Trello.authorized()) {
+      let authenticationSuccess = () => {
+        console.log('Trello authentication success!');
+        $('.authenticate').addClass('hide');
+        if (!boardExists()) {
+          $('.create-board').removeClass('hide');
+        }
+        else {
+          $('.create-board').addClass('hide');
+          $('.has-board').removeClass('hide');
+        }
       }
-      else {
-        $('.create-board').addClass('hide');
-        $('.has-board').removeClass('hide');
+      let authenticationFailure = () => {
+        console.log('Trello authentication failure!');
       }
-    }
-    let authenticationFailure = () => {
-      console.log('Trello authentication failure!');
-    }
 
-    $('.authenticate__link').on('click', () => {
-        Trello.authorize({
-          type: 'popup',
-          name: 'Trello Meal Planner',
-          scope: {
-            read: 'true',
-            write: 'true' },
-          expiration: 'never',
-          persist: true,
-          success: authenticationSuccess,
-          error: authenticationFailure
+      $('.authenticate__link').on('click', () => {
+          Trello.authorize({
+            type: 'popup',
+            name: 'Trello Meal Planner',
+            scope: {
+              read: 'true',
+              write: 'true' },
+            expiration: 'never',
+            success: authenticationSuccess,
+            error: authenticationFailure
+          });
         });
-      });
-  }
-  else if (!boardExists()) {
-    $('.authenticate').addClass('hide');
-    $('.create-board').removeClass('hide');
-  }
-  else {
-    $('.authenticate').addClass('hide');
-    $('.create-board').addClass('hide');
-    $('.has-board').removeClass('hide');
-  }
+    }
+    else if (!boardExists()) {
+      $('.authenticate').addClass('hide');
+      $('.create-board').removeClass('hide');
+    }
+    else {
+      $('.authenticate').addClass('hide');
+      $('.create-board').addClass('hide');
+      $('.has-board').removeClass('hide');
+    }
+  };
 
   //
   // Log out.
