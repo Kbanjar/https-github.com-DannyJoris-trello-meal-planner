@@ -18,16 +18,9 @@ $(document).ready(function() {
   //
   let appInit = () => {
     if (!Trello.authorized()) {
-      $('.authenticate').removeClass('hide');
+      openAuthenticate();
       let authenticationSuccess = () => {
-        $('.authenticate').addClass('hide');
-        if (!boardExists()) {
-          $('.create-board').removeClass('hide');
-        }
-        else {
-          $('.create-board').addClass('hide');
-          $('.has-board').removeClass('hide');
-        }
+        ifBoardExists();
       }
       let authenticationFailure = () => {
         console.log('Trello authentication failed!');
@@ -45,14 +38,41 @@ $(document).ready(function() {
           });
         });
     }
-    else if (!boardExists()) {
-      $('.authenticate').addClass('hide');
-      $('.create-board').removeClass('hide');
+    else {
+      ifBoardExists();
+    }
+  };
+
+  let openAuthenticate = () => {
+    $('.authenticate').removeClass('hide');
+    $('.create-board').addClass('hide');
+    $('.has-board').addClass('hide');
+  };
+
+  let openCreateBoard = () => {
+    $('.authenticate').addClass('hide');
+    $('.create-board').removeClass('hide');
+    $('.has-board').addClass('hide');
+  };
+
+  let openHasBoard = () => {
+    $('.authenticate').addClass('hide');
+    $('.create-board').addClass('hide');
+    $('.has-board').removeClass('hide');
+  };
+
+  let ifBoardExists = () => {
+    if (localStorage.getItem('boardID')) {
+      Trello.get(`/board/${localStorage.getItem('boardID')}`)
+        .done((response) => {
+          openHasBoard();
+        })
+        .fail((response) => {
+          openCreateBoard();
+        });
     }
     else {
-      $('.authenticate').addClass('hide');
-      $('.create-board').addClass('hide');
-      $('.has-board').removeClass('hide');
+      openCreateBoard();
     }
   };
 
