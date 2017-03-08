@@ -1,5 +1,14 @@
 $(document).ready(function() {
 
+  let appVars = {};
+
+  if (localStorage.getItem('boardID')) {
+    appVars.boardID = localStorage.getItem('boardID');
+  }
+  if (localStorage.getItem('shortBoardUrl')) {
+    appVars.shortBoardUrl = localStorage.getItem('shortBoardUrl');
+  }
+
   // Include Trello client script.
   let trelloClient = 'https://trello.com/1/client.js?key=caf98b855b223644b58b7916f7649bca';
   if (localStorage.getItem('trello_token')) {
@@ -59,6 +68,7 @@ $(document).ready(function() {
     $('.authenticate').addClass('hide');
     $('.create-board').addClass('hide');
     $('.has-board').removeClass('hide');
+    setBoardButton();
   };
 
   let ifBoardExists = () => {
@@ -93,9 +103,12 @@ $(document).ready(function() {
       name: 'Meal Planner',
       defaultLabels: false,
       defaultLists: false
-    }).done((response) => {
+    }).then((response) => {
       console.log('Board created');
+      appVars.boardID = response.id;
       localStorage.setItem('boardID', response.id);
+      appVars.shortBoardUrl = response.shortUrl;
+      localStorage.setItem('shortBoardUrl', response.shortUrl);
       let labels = [
         {color: 'green', name: 'Baked goods'},
         {color: 'yellow', name: 'Breakfast'},
@@ -121,19 +134,58 @@ $(document).ready(function() {
       let deferreds = [];
       // Add labels.
       $.each(labels, (key, label) => {
-        deferreds.push(Trello.post(`/boards/${response.id}/labels`, {color: label.color, name: label.name}));
+        deferreds.push(Trello.post(`/boards/${appVars.boardID}/labels`, {color: label.color, name: label.name}));
       });
       // Add lists.
       $.each(lists, (key, list) => {
-        deferreds.push(Trello.post(`/boards/${response.id}/lists`, {name: list.name, pos: list.pos}));
+        deferreds.push(Trello.post(`/boards/${appVars.boardID}/lists`, {name: list.name, pos: list.pos}));
       });
 
       // Apply all the deferred promises.
-      $.when.apply($, deferreds).done(() => {
-        console.log('Labels & lists added');
+      return $.when.apply($, deferreds)
+    })
+    .then(() => {
+      console.log('Labels & lists added');
 
-        openHasBoard();
+      // Add example card.
+      return Trello.get(`/boards/${appVars.boardID}/lists`)
+    })
+    .then((response) => {
+      let recipesListID;
+      let mondayListID;
+      $.each(response, (key, list) => {
+        if (list.name === 'Recipes') {
+          appVars.recipesListID = list.id;
+          localStorage.setItem('recipesListID', appVars.recipesListID);
+        }
+        if (list.name === 'Monday') {
+          appVars.mondayListID = list.id;
+          localStorage.setItem('mondayListID', appVars.mondayListID);
+        }
       });
+      return Trello.post('/cards/', {
+        name: 'RECIPE TEMPLATE',
+        desc: 'Use this card as a template when adding new recipes. Press the copy button, give it a title and make sure to keep the checklists.',
+        idList: appVars.recipesListID
+      });
+    })
+    .then((response) => {
+      appVars.templateCardID = response.id;
+      localStorage.setItem('templateCardID', appVars.templateCardID);
+
+      // Add checklists.
+      return Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Things you probably have on hand'});
+    })
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Fresh produce'}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Dairy & other refrigerated items'}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Grains, legumes, pasta & bulk'}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Canned & jarred goods'}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Meat & alternatives'}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Everything else'}))
+    .done(() => {
+      console.log('Checklists added to template card');
+      console.log('Create board completed');
+      openHasBoard();
     });
   });
 
@@ -153,7 +205,7 @@ $(document).ready(function() {
 
   $('.modal-reset').on('click', () => {
     console.log('Reset board.');
-  })
+  });
 
   //
   // Extra items.
@@ -266,5 +318,17 @@ $(document).ready(function() {
     toggleExtraItems();
     updateExtraItemsList();
   });
+
+  //
+  // Set Board Button.
+  //
+  let setBoardButton = () => {
+    if (appVars.shortBoardUrl) {
+      $('.open-board')
+        .removeClass('hide')
+        .attr('href', appVars.shortBoardUrl);
+    }
+  };
+
 
 });
