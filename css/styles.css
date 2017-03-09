@@ -49,3 +49,7 @@ main {
 .card .card-content p.create-board__text {
   margin-bottom: 35px;
 }
+
+.create-board__progress {
+  margin-top: 65px;
+}

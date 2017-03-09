@@ -1,6 +1,13 @@
 $(document).ready(function() {
 
   let appVars = {};
+  const CHECKLIST_ON_HAND = 'Things you probably have on hand';
+  const CHECKLIST_PRODUCE = 'Fresh produce';
+  const CHECKLIST_DAIRY = 'Dairy & other refrigerated items';
+  const CHECKLIST_GRAINS = 'Grains, legumes, pasta & bulk';
+  const CHECKLIST_CANNED = 'Canned & jarred goods';
+  const CHECKLIST_MEAT = 'Meat & alternatives';
+  const CHECKLIST_OTHER = 'Everything else';
 
   if (localStorage.getItem('boardID')) {
     appVars.boardID = localStorage.getItem('boardID');
@@ -99,16 +106,20 @@ $(document).ready(function() {
   //
   $('.create-board__link').on('click', () => {
     // Create board API call.
+    startBoardProgress();
+    boardProgress(0);
     Trello.post('/boards', {
       name: 'Meal Planner',
       defaultLabels: false,
       defaultLists: false
-    }).then((response) => {
+    }).then(response => {
+      boardProgress(15);
       console.log('Board created');
       appVars.boardID = response.id;
       localStorage.setItem('boardID', response.id);
       appVars.shortBoardUrl = response.shortUrl;
       localStorage.setItem('shortBoardUrl', response.shortUrl);
+      let deferreds = [];
       let labels = [
         {color: 'green', name: 'Baked goods'},
         {color: 'yellow', name: 'Breakfast'},
@@ -131,26 +142,23 @@ $(document).ready(function() {
         {name: "Saturday", pos: 7},
         {name: "Sunday", pos: 8},
       ];
-      let deferreds = [];
-      // Add labels.
       $.each(labels, (key, label) => {
         deferreds.push(Trello.post(`/boards/${appVars.boardID}/labels`, {color: label.color, name: label.name}));
       });
-      // Add lists.
       $.each(lists, (key, list) => {
         deferreds.push(Trello.post(`/boards/${appVars.boardID}/lists`, {name: list.name, pos: list.pos}));
       });
-
-      // Apply all the deferred promises.
       return $.when.apply($, deferreds)
     })
     .then(() => {
+      boardProgress(30);
       console.log('Labels & lists added');
 
       // Add example card.
       return Trello.get(`/boards/${appVars.boardID}/lists`)
     })
-    .then((response) => {
+    .then(response => {
+      boardProgress(50);
       let recipesListID;
       let mondayListID;
       $.each(response, (key, list) => {
@@ -169,25 +177,104 @@ $(document).ready(function() {
         idList: appVars.recipesListID
       });
     })
-    .then((response) => {
+    .then(response => {
+      boardProgress(60);
       appVars.templateCardID = response.id;
       localStorage.setItem('templateCardID', appVars.templateCardID);
 
       // Add checklists.
-      return Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Things you probably have on hand'});
+      return Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
     })
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Fresh produce'}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Dairy & other refrigerated items'}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Grains, legumes, pasta & bulk'}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Canned & jarred goods'}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Meat & alternatives'}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: 'Everything else'}))
-    .done(() => {
-      console.log('Checklists added to template card');
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_PRODUCE}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_DAIRY}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_GRAINS}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_CANNED}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_MEAT}))
+    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_OTHER}))
+    .then(() => Trello.post('/cards/', {
+      name: 'Cremini and chard stuffed shells',
+      desc: 'Vegetarian stuffed shells filled with ricotta cheese, cremini mushrooms, and Swiss chard.',
+      idList: appVars.mondayListID,
+      idCardSource: appVars.templateCardID
+    }))
+    .then(response => {
+      boardProgress(70);
+      appVars.recipeCardID = response.id;
+      return Trello.post(`/cards/${response.id}/attachments`, {
+        url: 'http://ohmyveggies.com/recipe-cremini-and-chard-stuffed-shells/'
+      });
+    })
+    .then(() => Trello.get(`/boards/${appVars.boardID}/labels`))
+    .then(response => {
+      let red = $.grep(response, label => label.color === 'red')[0];
+      return Trello.post(`/cards/${appVars.recipeCardID}/idLabels`, { value: red.id });
+    })
+    .then(() => Trello.get(`/boards/${appVars.boardID}/checklists`))
+    .then((response) => {
+      boardProgress(80);
+      appVars.recipeChecklists = {};
+      appVars.recipeChecklists.onHand = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_ON_HAND && checklist.idCard === appVars.recipeCardID)[0].id;
+      appVars.recipeChecklists.produce = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_PRODUCE && checklist.idCard === appVars.recipeCardID)[0].id;
+      appVars.recipeChecklists.dairy = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_DAIRY && checklist.idCard === appVars.recipeCardID)[0].id;
+      appVars.recipeChecklists.grains = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_GRAINS && checklist.idCard === appVars.recipeCardID)[0].id;
+      appVars.recipeChecklists.canned = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_CANNED && checklist.idCard === appVars.recipeCardID)[0].id;
+
+      console.log('appVars', appVars);
+      console.log('checklists', response);
+      let deferreds = [];
+      let ingredients = [
+        {checklist: appVars.recipeChecklists.onHand, name: '1 tablespoon olive oil'},
+        {checklist: appVars.recipeChecklists.onHand, name: 'Salt and pepper to taste'},
+        {checklist: appVars.recipeChecklists.onHand, name: '2 teaspoons Italian seasoning'},
+        {checklist: appVars.recipeChecklists.produce, name: '3 cloves garlic, minced'},
+        {checklist: appVars.recipeChecklists.produce, name: '8 ounces sliced cremini mushrooms'},
+        {checklist: appVars.recipeChecklists.produce, name: '1 bunch (about 8 ounces) Swiss chard, stems discarded and leaves coarsely chopped'},
+        {checklist: appVars.recipeChecklists.dairy, name: '1 (15-ounce) container ricotta cheese'},
+        {checklist: appVars.recipeChecklists.dairy, name: '1/2 cup shredded mozzarella cheese'},
+        {checklist: appVars.recipeChecklists.dairy, name: '1/2 cup shredded Parmesan cheese'},
+        {checklist: appVars.recipeChecklists.dairy, name: '1 egg, lightly beaten'},
+        {checklist: appVars.recipeChecklists.grains, name: '16 jumbo pasta shells, cooked according to package directions'},
+        {checklist: appVars.recipeChecklists.canned, name: '1 1/2 cups marinara sauce, divided'}
+      ];
+      console.log('ingredients', ingredients);
+      $.each(ingredients, (key, ingredient) => {
+        deferreds.push(Trello.post(`/cards/${appVars.recipeCardID}/checklist/${ingredient.checklist}/checkItem`, {
+          idChecklist: ingredient.checklist,
+          name: ingredient.name
+        }));
+      });
+      return $.when.apply($, deferreds);
+    })
+    .then(() => {
+
+      boardProgress(100);
       console.log('Create board completed');
-      openHasBoard();
+      setTimeout(() => {
+        endBoardProgress();
+        openHasBoard();
+      }, 500);
     });
   });
+
+  //
+  // Create board progress.
+  //
+  let boardProgress = (progress = 0) => {
+    $('.create-board__determinate').css('width', `${progress}%`);
+  };
+
+  let startBoardProgress = () => {
+    $('.create-board__progress').removeClass('hide');
+  };
+
+  let endBoardProgress = () => {
+    $('.create-board__progress').addClass('hide');
+  };
 
   //
   // Retrieve list.
