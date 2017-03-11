@@ -1,6 +1,6 @@
 $(document).ready(function() {
 
-  let appVars = {};
+  let app = {};
   const CHECKLIST_ON_HAND = 'Things you probably have on hand';
   const CHECKLIST_PRODUCE = 'Fresh produce';
   const CHECKLIST_DAIRY = 'Dairy & other refrigerated items';
@@ -10,10 +10,10 @@ $(document).ready(function() {
   const CHECKLIST_OTHER = 'Everything else';
 
   if (localStorage.getItem('boardID')) {
-    appVars.boardID = localStorage.getItem('boardID');
+    app.boardID = localStorage.getItem('boardID');
   }
   if (localStorage.getItem('shortBoardUrl')) {
-    appVars.shortBoardUrl = localStorage.getItem('shortBoardUrl');
+    app.shortBoardUrl = localStorage.getItem('shortBoardUrl');
   }
 
   // Include Trello client script.
@@ -115,9 +115,9 @@ $(document).ready(function() {
     }).then(response => {
       boardProgress(15);
       console.log('Board created');
-      appVars.boardID = response.id;
+      app.boardID = response.id;
       localStorage.setItem('boardID', response.id);
-      appVars.shortBoardUrl = response.shortUrl;
+      app.shortBoardUrl = response.shortUrl;
       localStorage.setItem('shortBoardUrl', response.shortUrl);
       let deferreds = [];
       let labels = [
@@ -143,10 +143,10 @@ $(document).ready(function() {
         {name: "Sunday", pos: 8},
       ];
       $.each(labels, (key, label) => {
-        deferreds.push(Trello.post(`/boards/${appVars.boardID}/labels`, {color: label.color, name: label.name}));
+        deferreds.push(Trello.post(`/boards/${app.boardID}/labels`, {color: label.color, name: label.name}));
       });
       $.each(lists, (key, list) => {
-        deferreds.push(Trello.post(`/boards/${appVars.boardID}/lists`, {name: list.name, pos: list.pos}));
+        deferreds.push(Trello.post(`/boards/${app.boardID}/lists`, {name: list.name, pos: list.pos}));
       });
       return $.when.apply($, deferreds)
     })
@@ -155,7 +155,7 @@ $(document).ready(function() {
       console.log('Labels & lists added');
 
       // Add example card.
-      return Trello.get(`/boards/${appVars.boardID}/lists`)
+      return Trello.get(`/boards/${app.boardID}/lists`)
     })
     .then(response => {
       boardProgress(50);
@@ -163,87 +163,87 @@ $(document).ready(function() {
       let mondayListID;
       $.each(response, (key, list) => {
         if (list.name === 'Recipes') {
-          appVars.recipesListID = list.id;
-          localStorage.setItem('recipesListID', appVars.recipesListID);
+          app.recipesListID = list.id;
+          localStorage.setItem('recipesListID', app.recipesListID);
         }
         if (list.name === 'Monday') {
-          appVars.mondayListID = list.id;
-          localStorage.setItem('mondayListID', appVars.mondayListID);
+          app.mondayListID = list.id;
+          localStorage.setItem('mondayListID', app.mondayListID);
         }
       });
       return Trello.post('/cards/', {
         name: 'RECIPE TEMPLATE',
         desc: 'Use this card as a template when adding new recipes. Press the copy button, give it a title and make sure to keep the checklists.',
-        idList: appVars.recipesListID
+        idList: app.recipesListID
       });
     })
     .then(response => {
       boardProgress(60);
-      appVars.templateCardID = response.id;
-      localStorage.setItem('templateCardID', appVars.templateCardID);
+      app.templateCardID = response.id;
+      localStorage.setItem('templateCardID', app.templateCardID);
 
       // Add checklists.
-      return Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
+      return Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
     })
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_PRODUCE}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_DAIRY}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_GRAINS}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_CANNED}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_MEAT}))
-    .then(() => Trello.post(`/cards/${appVars.templateCardID}/checklists`, {value: null, name: CHECKLIST_OTHER}))
+    .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_PRODUCE}))
+    .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_DAIRY}))
+    .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_GRAINS}))
+    .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_CANNED}))
+    .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_MEAT}))
+    .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_OTHER}))
     .then(() => Trello.post('/cards/', {
       name: 'Cremini and chard stuffed shells',
       desc: 'Vegetarian stuffed shells filled with ricotta cheese, cremini mushrooms, and Swiss chard.',
-      idList: appVars.mondayListID,
-      idCardSource: appVars.templateCardID
+      idList: app.mondayListID,
+      idCardSource: app.templateCardID
     }))
     .then(response => {
       boardProgress(70);
-      appVars.recipeCardID = response.id;
+      app.recipeCardID = response.id;
       return Trello.post(`/cards/${response.id}/attachments`, {
         url: 'http://ohmyveggies.com/recipe-cremini-and-chard-stuffed-shells/'
       });
     })
-    .then(() => Trello.get(`/boards/${appVars.boardID}/labels`))
+    .then(() => Trello.get(`/boards/${app.boardID}/labels`))
     .then(response => {
       let red = $.grep(response, label => label.color === 'red')[0];
-      return Trello.post(`/cards/${appVars.recipeCardID}/idLabels`, { value: red.id });
+      return Trello.post(`/cards/${app.recipeCardID}/idLabels`, { value: red.id });
     })
-    .then(() => Trello.get(`/boards/${appVars.boardID}/checklists`))
+    .then(() => Trello.get(`/boards/${app.boardID}/checklists`))
     .then((response) => {
       boardProgress(80);
-      appVars.recipeChecklists = {};
-      appVars.recipeChecklists.onHand = $.grep(response, checklist =>
-        checklist.name === CHECKLIST_ON_HAND && checklist.idCard === appVars.recipeCardID)[0].id;
-      appVars.recipeChecklists.produce = $.grep(response, checklist =>
-        checklist.name === CHECKLIST_PRODUCE && checklist.idCard === appVars.recipeCardID)[0].id;
-      appVars.recipeChecklists.dairy = $.grep(response, checklist =>
-        checklist.name === CHECKLIST_DAIRY && checklist.idCard === appVars.recipeCardID)[0].id;
-      appVars.recipeChecklists.grains = $.grep(response, checklist =>
-        checklist.name === CHECKLIST_GRAINS && checklist.idCard === appVars.recipeCardID)[0].id;
-      appVars.recipeChecklists.canned = $.grep(response, checklist =>
-        checklist.name === CHECKLIST_CANNED && checklist.idCard === appVars.recipeCardID)[0].id;
+      app.recipeChecklists = {};
+      app.recipeChecklists.onHand = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_ON_HAND && checklist.idCard === app.recipeCardID)[0].id;
+      app.recipeChecklists.produce = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_PRODUCE && checklist.idCard === app.recipeCardID)[0].id;
+      app.recipeChecklists.dairy = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_DAIRY && checklist.idCard === app.recipeCardID)[0].id;
+      app.recipeChecklists.grains = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_GRAINS && checklist.idCard === app.recipeCardID)[0].id;
+      app.recipeChecklists.canned = $.grep(response, checklist =>
+        checklist.name === CHECKLIST_CANNED && checklist.idCard === app.recipeCardID)[0].id;
 
-      console.log('appVars', appVars);
+      console.log('app', app);
       console.log('checklists', response);
       let deferreds = [];
       let ingredients = [
-        {checklist: appVars.recipeChecklists.onHand, name: '1 tablespoon olive oil'},
-        {checklist: appVars.recipeChecklists.onHand, name: 'Salt and pepper to taste'},
-        {checklist: appVars.recipeChecklists.onHand, name: '2 teaspoons Italian seasoning'},
-        {checklist: appVars.recipeChecklists.produce, name: '3 cloves garlic, minced'},
-        {checklist: appVars.recipeChecklists.produce, name: '8 ounces sliced cremini mushrooms'},
-        {checklist: appVars.recipeChecklists.produce, name: '1 bunch (about 8 ounces) Swiss chard, stems discarded and leaves coarsely chopped'},
-        {checklist: appVars.recipeChecklists.dairy, name: '1 (15-ounce) container ricotta cheese'},
-        {checklist: appVars.recipeChecklists.dairy, name: '1/2 cup shredded mozzarella cheese'},
-        {checklist: appVars.recipeChecklists.dairy, name: '1/2 cup shredded Parmesan cheese'},
-        {checklist: appVars.recipeChecklists.dairy, name: '1 egg, lightly beaten'},
-        {checklist: appVars.recipeChecklists.grains, name: '16 jumbo pasta shells, cooked according to package directions'},
-        {checklist: appVars.recipeChecklists.canned, name: '1 1/2 cups marinara sauce, divided'}
+        {checklist: app.recipeChecklists.onHand, name: '1 tablespoon olive oil'},
+        {checklist: app.recipeChecklists.onHand, name: 'Salt and pepper to taste'},
+        {checklist: app.recipeChecklists.onHand, name: '2 teaspoons Italian seasoning'},
+        {checklist: app.recipeChecklists.produce, name: '3 cloves garlic, minced'},
+        {checklist: app.recipeChecklists.produce, name: '8 ounces sliced cremini mushrooms'},
+        {checklist: app.recipeChecklists.produce, name: '1 bunch (about 8 ounces) Swiss chard, stems discarded and leaves coarsely chopped'},
+        {checklist: app.recipeChecklists.dairy, name: '1 (15-ounce) container ricotta cheese'},
+        {checklist: app.recipeChecklists.dairy, name: '1/2 cup shredded mozzarella cheese'},
+        {checklist: app.recipeChecklists.dairy, name: '1/2 cup shredded Parmesan cheese'},
+        {checklist: app.recipeChecklists.dairy, name: '1 egg, lightly beaten'},
+        {checklist: app.recipeChecklists.grains, name: '16 jumbo pasta shells, cooked according to package directions'},
+        {checklist: app.recipeChecklists.canned, name: '1 1/2 cups marinara sauce, divided'}
       ];
       console.log('ingredients', ingredients);
       $.each(ingredients, (key, ingredient) => {
-        deferreds.push(Trello.post(`/cards/${appVars.recipeCardID}/checklist/${ingredient.checklist}/checkItem`, {
+        deferreds.push(Trello.post(`/cards/${app.recipeCardID}/checklist/${ingredient.checklist}/checkItem`, {
           idChecklist: ingredient.checklist,
           name: ingredient.name
         }));
@@ -410,10 +410,10 @@ $(document).ready(function() {
   // Set Board Button.
   //
   let setBoardButton = () => {
-    if (appVars.shortBoardUrl) {
+    if (app.shortBoardUrl) {
       $('.open-board')
         .removeClass('hide')
-        .attr('href', appVars.shortBoardUrl);
+        .attr('href', app.shortBoardUrl);
     }
   };
 
