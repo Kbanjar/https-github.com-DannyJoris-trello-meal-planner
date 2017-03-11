@@ -19,7 +19,9 @@ main {
   font-size: 32px;
 }
 
-.list-title {
+.recipes__title,
+.checklist__title,
+.extra-items__title {
   font-size: 20px;
 }
 

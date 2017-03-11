@@ -37,10 +37,10 @@ $(document).ready(function() {
       openAuthenticate();
       let authenticationSuccess = () => {
         ifBoardExists();
-      }
+      };
       let authenticationFailure = () => {
         console.log('Trello authentication failed!');
-      }
+      };
       $('.authenticate__link').on('click', () => {
           Trello.authorize({
             type: 'popup',
@@ -62,23 +62,25 @@ $(document).ready(function() {
   let openAuthenticate = () => {
     $('.authenticate').removeClass('hide');
     $('.create-board').addClass('hide');
-    $('.has-board').addClass('hide');
+    $('.board').addClass('hide');
   };
 
   let openCreateBoard = () => {
     $('.authenticate').addClass('hide');
     $('.create-board').removeClass('hide');
-    $('.has-board').addClass('hide');
+    $('.board').addClass('hide');
   };
 
   let openHasBoard = () => {
     $('.authenticate').addClass('hide');
     $('.create-board').addClass('hide');
-    $('.has-board').removeClass('hide');
+    $('.board').removeClass('hide');
+    checklistInit();
     setBoardButton();
   };
 
   let ifBoardExists = () => {
+    // @TODO: if the localstorage board ID somehow got removed, showing a list of Trello boards, and selecting the correct Meal Planner board would set the localstorate ID again.
     if (localStorage.getItem('boardID')) {
       Trello.get(`/board/${localStorage.getItem('boardID')}`)
         .done((response) => {
@@ -277,8 +279,109 @@ $(document).ready(function() {
   };
 
   //
-  // Retrieve list.
+  // Checklist init.
   //
+  let checklistInit = () => {
+    // Get lists.
+    Trello.get(`/boards/${app.boardID}/lists`)
+      .then(response => {
+        app.checklist = {};
+        app.checklist.allowedListNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        app.checklist.allowedListIDs = [];
+        $.each(response, (key, list) => {
+          if (app.checklist.allowedListNames.indexOf(list.name) != -1) {
+            app.checklist.allowedListIDs.push(list.id);
+          }
+        });
+        localStorage.setItem('allowedListIDs', JSON.stringify(app.checklist.allowedListIDs));
+        return app.checklist.allowedListIDs;
+      })
+      .then(response => Trello.get(`/boards/${app.boardID}/cards`, {fields: ['name', 'idList', 'idChecklist']}))
+      .then(response => response.filter(card => app.checklist.allowedListIDs.indexOf(card.idList) != -1))
+      .then(response => {
+        app.checklist.recipes = response;
+        recipes = [];
+        $.each(response, (key, recipe) => {
+          // <a href="#!" class="collection-item">Tomato soup</a>
+          recipes.push($('<a>')
+            .attr('href', '#')
+            .addClass('collection-item')
+            .data('id', recipe.id)
+            .text(recipe.name));
+        });
+        $('.recipes').html('').append(recipes);
+        return response;
+      })
+      .then(response => {
+        let deferreds = [];
+        app.checklist.checklists = [];
+        $.each(response, (key, card) => {
+          deferreds.push(Trello.get(`/cards/${card.id}/checklists`).then(response => {
+            app.checklist.checklists.push(response);
+          }));
+        });
+        console.log(deferreds.length);
+        console.log(deferreds);
+        return $.when.apply($, deferreds);
+      })
+      .then(() => {
+        app.checklist.preRender = {};
+        $.each(app.checklist.checklists, (key, card) => {
+          $.each(card, (key, checklist) => {
+            if (!app.checklist.preRender[checklist.name]) {
+              app.checklist.preRender[checklist.name] = {
+                pos: checklist.pos,
+                items: []
+              }
+            }
+            $.each(checklist.checkItems, (key, item) => {
+              app.checklist.preRender[checklist.name].items.push(item);
+            });
+          });
+        });
+        let $checklists = [];
+        let checklistArray = $.map(app.checklist.preRender, (checklist, key) => {
+          return {
+            name: key,
+            pos: checklist.pos,
+            items: checklist.items
+          };
+        }).sort((a, b) => a.pos > b.pos);
+        console.log('checklistArray', checklistArray);
+        $.each(checklistArray, (key, checklist) => {
+          // <h2 class="checklist__title">Things you probably already have on hand</h2>
+          // <div>
+          //   <input type="checkbox" class="filled-in" id="item-1" />
+          //   <label for="item-1">2 Large carrots</label>
+          // </div>
+          if (checklist.items.length === 0) {
+            return;
+          }
+          $checklists.push($('<h2>')
+            .addClass('checklist__title')
+            .text(checklist.name));
+
+          $.each(checklist.items, (key, item) => {
+            let $input = $('<input>')
+              .attr('type', 'checkbox')
+              .addClass('filled-in')
+              .attr('id', item.id)
+              .prop('checked', () => item.state == 'complete');
+            let $label = $('<label>')
+              .attr('for', item.id  )
+              .text(item.name);
+            let $wrapper = $('<div></div>')
+              .append($input)
+              .append($label);
+            $checklists.push($wrapper);
+          });
+        });
+        // Add to DOM.
+        $('.checklist')
+          .html('')
+          .append($checklists);
+      });
+  };
 
   //
   // Update card values.
@@ -407,6 +510,14 @@ $(document).ready(function() {
   });
 
   //
+  // Refresh board
+  //
+  $('.refresh-board').on('click', (e) => {
+    e.preventDefault();
+    checklistInit();
+  });
+
+  //
   // Set Board Button.
   //
   let setBoardButton = () => {
@@ -416,6 +527,5 @@ $(document).ready(function() {
         .attr('href', app.shortBoardUrl);
     }
   };
-
 
 });
