@@ -12,8 +12,8 @@ $(document).ready(function() {
   if (localStorage.getItem('boardID')) {
     app.boardID = localStorage.getItem('boardID');
   }
-  if (localStorage.getItem('shortBoardUrl')) {
-    app.shortBoardUrl = localStorage.getItem('shortBoardUrl');
+  if (localStorage.getItem('shortUrl')) {
+    app.shortUrl = localStorage.getItem('shortUrl');
   }
 
   // Include Trello client script.
@@ -35,7 +35,7 @@ $(document).ready(function() {
   let appInit = () => {
     if (!Trello.authorized()) {
       openAuthenticate();
-      let authenticationSuccess = () => {
+      let authenticationSuccess = (result) => {
         ifBoardExists();
       };
       let authenticationFailure = () => {
@@ -70,6 +70,30 @@ $(document).ready(function() {
     $('.authenticate').addClass('hide');
     $('.create-board').removeClass('hide');
     $('.board').addClass('hide');
+    Trello.get('/members/me/boards')
+      .then(response => {
+        let boards = [];
+        $.each(response, (key, board) => {
+          console.log('board', board);
+          if (board.closed === false && board.idOrganization === null) {
+            // <a href="#" class="collection-item">Cremini and chard stuffed shells</a>
+            boards.push($('<a>')
+              .attr('href', '#')
+              .addClass('collection-item')
+              .text(board.name)
+              .on('click', function(e) {
+                e.preventDefault();
+                localStorage.setItem('boardID', board.id);
+                app.boardID = board.id;
+                app.shortUrl = board.shortUrl;
+                console.log('app', app);
+                openHasBoard();
+              }));
+          }
+        });
+        $('.create-board__select').removeClass('hide');
+        $('.create-board__board-list').append(boards);
+      });
   };
 
   let openHasBoard = () => {
@@ -81,7 +105,6 @@ $(document).ready(function() {
   };
 
   let ifBoardExists = () => {
-    // @TODO: if the localstorage board ID somehow got removed, showing a list of Trello boards, and selecting the correct Meal Planner board would set the localstorate ID again.
     if (localStorage.getItem('boardID')) {
       Trello.get(`/board/${localStorage.getItem('boardID')}`)
         .done((response) => {
@@ -95,15 +118,6 @@ $(document).ready(function() {
       openCreateBoard();
     }
   };
-
-  //
-  // Log out.
-  //
-  $('.log-out').on('click', function(e) {
-    e.preventDefault();
-    Trello.deauthorize();
-    openAuthenticate();
-  });
 
   //
   // Create board.
@@ -122,8 +136,8 @@ $(document).ready(function() {
       console.log('Board created');
       app.boardID = response.id;
       localStorage.setItem('boardID', response.id);
-      app.shortBoardUrl = response.shortUrl;
-      localStorage.setItem('shortBoardUrl', response.shortUrl);
+      app.shortUrl = response.shortUrl;
+      localStorage.setItem('shortUrl', response.shortUrl);
       let deferreds = [];
       let labels = [
         {color: 'green', name: 'Baked goods'},
@@ -535,11 +549,21 @@ $(document).ready(function() {
   // Set Board Button.
   //
   let setBoardButton = () => {
-    if (app.shortBoardUrl) {
+    if (app.shortUrl) {
       $('.open-board')
         .removeClass('hide')
-        .attr('href', app.shortBoardUrl);
+        .attr('href', app.shortUrl);
     }
   };
+
+  //
+  // Log out.
+  //
+  $('.log-out').on('click', function(e) {
+    e.preventDefault();
+    Trello.deauthorize();
+    localStorage.removeItem('boardID');
+    openAuthenticate();
+  });
 
 });

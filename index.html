@@ -20,8 +20,12 @@
               <a class="waves-effect waves-light btn btn-large authenticate__link">Authenticate <img class="button-icon-trello" src="images/trello-mark-white.svg" /></a>
             </div>
             <div class="create-board is-authenticated has-no-board hide">
-              <p class="create-board__text">It looks like you don't have a Trello Meal Planning board yet. Create one now?</p>
+              <p class="create-board__text">If this is the first time using the Trello Meal Planning app, create a new board.</p>
               <a class="waves-effect waves-light btn btn-large create-board__link">Create new board</a>
+              <div class="create-board__select hide">
+                <p class="create-board__text">Or select a Meal Planning board if you already created one.</p>
+                <div class="create-board__board-list collection"></div>
+              </div>
               <div class="create-board__progress progress hide">
                 <div class="create-board__determinate determinate"></div>
               </div>
