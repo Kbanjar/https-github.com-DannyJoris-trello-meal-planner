@@ -128,6 +128,7 @@ $(document).ready(function() {
   //
   $('.create-board__link').on('click', function(e) {
     e.preventDefault();
+    $(this).addClass('disabled');
     // Create board API call.
     startBoardProgress();
     boardProgress(0);
@@ -276,6 +277,7 @@ $(document).ready(function() {
       console.log('Create board completed');
       setTimeout(() => {
         endBoardProgress();
+        $(this).removeClass('disabled');
         openHasBoard();
       }, 500);
     });
