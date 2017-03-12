@@ -34,6 +34,9 @@
 
               <form action="#" class="checklists">
                 <div class="checklist"></div>
+                <div class="checklist__actions">
+                  <a class="waves-effect waves-light btn refresh-board" href="#"><i class="material-icons right">refresh</i>Refresh board</a>
+                </div>
               </form>
 
               <form action="#" class="extra-items">
@@ -49,7 +52,9 @@
                       <label for="item-2">Extra item 2</label>
                     </div>
                   </div>
-                  <a class="extra-items__edit waves-effect waves-light btn" href="#">Edit</a>
+                  <div class="extra-items__actions">
+                    <a class="extra-items__edit waves-effect waves-light btn" href="#">Edit</a>
+                  </div>
                 </div>
                 <div class="extra-items__input hide">
                   <div class="input-field">
@@ -63,9 +68,6 @@
 
             <div class="card-action is-authenticated">
               <ul>
-                <li class="right-align">
-                  <a class="waves-effect waves-light btn refresh-board" href="#"><i class="material-icons right">refresh</i>Refresh board</a>
-                </li>
                 <li class="right-align">
                   <a class="waves-effect waves-light btn open-board hide" href="#">Open board <img class="button-icon-trello" src="images/trello-mark-white.svg" /></a>
                 </li>

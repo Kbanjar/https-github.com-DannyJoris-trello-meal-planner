@@ -25,6 +25,11 @@ main {
   font-size: 20px;
 }
 
+.checklist__actions,
+.extra-items__actions {
+  margin-top: 20px;
+}
+
 .button-icon-trello {
   position: relative;
   top: 4px;

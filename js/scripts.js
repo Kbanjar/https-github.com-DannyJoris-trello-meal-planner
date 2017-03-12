@@ -226,8 +226,6 @@ $(document).ready(function() {
       app.recipeChecklists.canned = $.grep(response, checklist =>
         checklist.name === CHECKLIST_CANNED && checklist.idCard === app.recipeCardID)[0].id;
 
-      console.log('app', app);
-      console.log('checklists', response);
       let deferreds = [];
       let ingredients = [
         {checklist: app.recipeChecklists.onHand, name: '1 tablespoon olive oil'},
@@ -243,7 +241,6 @@ $(document).ready(function() {
         {checklist: app.recipeChecklists.grains, name: '16 jumbo pasta shells, cooked according to package directions'},
         {checklist: app.recipeChecklists.canned, name: '1 1/2 cups marinara sauce, divided'}
       ];
-      console.log('ingredients', ingredients);
       $.each(ingredients, (key, ingredient) => {
         deferreds.push(Trello.post(`/cards/${app.recipeCardID}/checklist/${ingredient.checklist}/checkItem`, {
           idChecklist: ingredient.checklist,
@@ -320,55 +317,59 @@ $(document).ready(function() {
             app.checklist.checklists.push(response);
           }));
         });
-        console.log(deferreds.length);
-        console.log(deferreds);
         return $.when.apply($, deferreds);
       })
       .then(() => {
         app.checklist.preRender = {};
+
         $.each(app.checklist.checklists, (key, card) => {
           $.each(card, (key, checklist) => {
             if (!app.checklist.preRender[checklist.name]) {
               app.checklist.preRender[checklist.name] = {
+                idCard: checklist.idCard,
                 pos: checklist.pos,
                 items: []
               }
             }
             $.each(checklist.checkItems, (key, item) => {
+              item.idCard = checklist.idCard;
               app.checklist.preRender[checklist.name].items.push(item);
             });
           });
         });
         let $checklists = [];
         let checklistArray = $.map(app.checklist.preRender, (checklist, key) => {
+          let checklistItems = checklist.items.sort((a, b) => {
+            return removeMeasurements(a.name) > removeMeasurements(b.name);
+          });
           return {
             name: key,
             pos: checklist.pos,
-            items: checklist.items
+            items: checklistItems
           };
         }).sort((a, b) => a.pos > b.pos);
-        console.log('checklistArray', checklistArray);
         $.each(checklistArray, (key, checklist) => {
-          // <h2 class="checklist__title">Things you probably already have on hand</h2>
-          // <div>
-          //   <input type="checkbox" class="filled-in" id="item-1" />
-          //   <label for="item-1">2 Large carrots</label>
-          // </div>
           if (checklist.items.length === 0) {
             return;
           }
           $checklists.push($('<h2>')
             .addClass('checklist__title')
             .text(checklist.name));
-
           $.each(checklist.items, (key, item) => {
             let $input = $('<input>')
               .attr('type', 'checkbox')
               .addClass('filled-in')
               .attr('id', item.id)
-              .prop('checked', () => item.state == 'complete');
+              .prop('checked', () => item.state == 'complete')
+              .on('change', function() { // For some reason () => {} breaks the "this" variable.
+                Trello.put(`/cards/${item.idCard}/checklist/${item.idChecklist}/checkItem/${item.id}/state`, {
+                  idChecklist: item.idChecklist,
+                  idCheckItem: item.id,
+                  value: $(this).prop('checked')
+                });
+              });
             let $label = $('<label>')
-              .attr('for', item.id  )
+              .attr('for', item.id)
               .text(item.name);
             let $wrapper = $('<div></div>')
               .append($input)
@@ -381,6 +382,11 @@ $(document).ready(function() {
           .html('')
           .append($checklists);
       });
+  };
+
+  // @TODO could be improved.
+  let removeMeasurements = (str) => {
+    return str.replace(/^[^a-zA-Z]+(cups|cup|tin|tins|can|cans|ounce|ounces|gram|grams|liter|liters|litre|litres|quart|gallon|pint|tablespoon|tablespoons|teaspoon|teaspoons|tsp|bunch|clove|cloves|sliced|chopped)*[^a-zA-Z]+/g, '');
   };
 
   //
