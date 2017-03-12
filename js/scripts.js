@@ -73,10 +73,15 @@ $(document).ready(function() {
     Trello.get('/members/me/boards')
       .then(response => {
         let boards = [];
-        $.each(response, (key, board) => {
-          console.log('board', board);
+        let sortedBoards = response.sort((a, b) => {
+          let nameA = a.name.toLowerCase(),
+            nameB = b.name.toLowerCase();
+          if (nameA < nameB) { return -1; }
+          if (nameA > nameB) { return 1; }
+          return 0;
+        });
+        $.each(sortedBoards, (key, board) => {
           if (board.closed === false && board.idOrganization === null) {
-            // <a href="#" class="collection-item">Cremini and chard stuffed shells</a>
             boards.push($('<a>')
               .attr('href', '#')
               .addClass('collection-item')
@@ -86,7 +91,6 @@ $(document).ready(function() {
                 localStorage.setItem('boardID', board.id);
                 app.boardID = board.id;
                 app.shortUrl = board.shortUrl;
-                console.log('app', app);
                 openHasBoard();
               }));
           }
@@ -315,8 +319,8 @@ $(document).ready(function() {
       .then(response => {
         app.checklist.recipes = response;
         recipes = [];
+
         $.each(response, (key, recipe) => {
-          // <a href="#!" class="collection-item">Tomato soup</a>
           recipes.push($('<a>')
             .attr('href', '#')
             .addClass('collection-item')
@@ -357,7 +361,11 @@ $(document).ready(function() {
         let $checklists = [];
         let checklistArray = $.map(app.checklist.preRender, (checklist, key) => {
           let checklistItems = checklist.items.sort((a, b) => {
-            return removeMeasurements(a.name) > removeMeasurements(b.name);
+            let nameA = a.name.toLowerCase(),
+              nameB = b.name.toLowerCase();
+            if (removeMeasurements(nameA) < removeMeasurements(nameB)) { return -1; }
+            if (removeMeasurements(nameA) > removeMeasurements(nameB)) { return 1; }
+            return 0;
           });
           return {
             name: key,
