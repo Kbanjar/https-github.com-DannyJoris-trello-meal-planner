@@ -322,8 +322,7 @@ $(document).ready(function() {
       .then(response => response.filter(card => app.checklist.allowedListIDs.indexOf(card.idList) != -1))
       .then(response => {
         app.checklist.recipes = response;
-        recipes = [];
-
+        let recipes = [];
         $.each(response, (key, recipe) => {
           recipes.push($('<a>')
             .attr('href', '#')
@@ -351,7 +350,22 @@ $(document).ready(function() {
               }
             }));
         });
-        $('.recipes').html('').append(recipes);
+        if (app.checklist.recipes.length !== 0) {
+          $('.recipes')
+            .removeClass('hide')
+            .html('')
+            .append(recipes);
+          $('.recipes__empty').addClass('hide');
+        }
+        else {
+          $('.recipes')
+            .html('')
+            .addClass('hide');
+          $('.recipes__empty')
+            .removeClass('hide')
+            .html('')
+            .append($('<p></p>').html(`No recipes added yet. Move some recipes to the day columns in your <a href="${app.shortUrl}">Trello board</a> to get started.`));
+        }
         return response;
       })
       .then(response => {
@@ -366,7 +380,6 @@ $(document).ready(function() {
       })
       .then(() => {
         app.checklist.preRender = {};
-
         $.each(app.checklist.checklists, (key, card) => {
           $.each(card, (key, checklist) => {
             if (!app.checklist.preRender[checklist.name]) {
