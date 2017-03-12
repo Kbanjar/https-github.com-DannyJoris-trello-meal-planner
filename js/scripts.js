@@ -41,18 +41,19 @@ $(document).ready(function() {
       let authenticationFailure = () => {
         console.log('Trello authentication failed!');
       };
-      $('.authenticate__link').on('click', () => {
-          Trello.authorize({
-            type: 'popup',
-            name: 'Trello Meal Planner',
-            scope: {
-              read: 'true',
-              write: 'true' },
-            expiration: 'never',
-            success: authenticationSuccess,
-            error: authenticationFailure
-          });
+      $('.authenticate__link').on('click', function(e) {
+        e.preventDefault();
+        Trello.authorize({
+          type: 'popup',
+          name: 'Trello Meal Planner',
+          scope: {
+            read: 'true',
+            write: 'true' },
+          expiration: 'never',
+          success: authenticationSuccess,
+          error: authenticationFailure
         });
+      });
     }
     else {
       ifBoardExists();
@@ -98,7 +99,8 @@ $(document).ready(function() {
   //
   // Log out.
   //
-  $('.log-out').on('click', () => {
+  $('.log-out').on('click', function(e) {
+    e.preventDefault();
     Trello.deauthorize();
     openAuthenticate();
   });
@@ -106,7 +108,8 @@ $(document).ready(function() {
   //
   // Create board.
   //
-  $('.create-board__link').on('click', () => {
+  $('.create-board__link').on('click', function(e) {
+    e.preventDefault();
     // Create board API call.
     startBoardProgress();
     boardProgress(0);
@@ -399,7 +402,8 @@ $(document).ready(function() {
 
   $('.modal').modal();
 
-  $('.modal-reset').on('click', () => {
+  $('.modal-reset').on('click', function(e) {
+    e.preventDefault();
     console.log('Reset board.');
   });
 
@@ -410,7 +414,8 @@ $(document).ready(function() {
   // Bind extra item change.
   let bindExtraItemsCheckbox = () => {
     $('.extra-items__list').find(':checkbox').each((key, value) => {
-      $(value).on('change', () => {
+      $(value).on('change', function(e) {
+        e.preventDefault();
         let extraItems = JSON.parse(localStorage.getItem('extraItems'));
         extraItems[key].checked = $(value).is(':checked');
         localStorage.setItem('extraItems', JSON.stringify(extraItems));
@@ -478,19 +483,22 @@ $(document).ready(function() {
   };
 
   // Extra items edit.
-  $('.extra-items__edit').on('click', () => {
+  $('.extra-items__edit').on('click', function(e) {
+    e.preventDefault();
     toggleExtraItems();
     updateExtraItemsTextarea();
 
   });
 
   // Extra items cancel.
-  $('.extra-items__cancel').on('click', () => {
+  $('.extra-items__cancel').on('click', function(e) {
+    e.preventDefault();
     toggleExtraItems();
   });
 
   // Extra items save.
-  $('.extra-items__save').on('click', () => {
+  $('.extra-items__save').on('click', function(e) {
+    e.preventDefault();
     // Store in localStorage.
     let extraItemsTextareaValues = $('#extra-items__textarea').val().trim();
     if (extraItemsTextareaValues) {
@@ -518,7 +526,7 @@ $(document).ready(function() {
   //
   // Refresh board
   //
-  $('.refresh-board').on('click', (e) => {
+  $('.refresh-board').on('click', function(e) {
     e.preventDefault();
     checklistInit();
   });
