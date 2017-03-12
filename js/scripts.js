@@ -89,6 +89,7 @@ $(document).ready(function() {
               .on('click', function(e) {
                 e.preventDefault();
                 localStorage.setItem('boardID', board.id);
+                localStorage.setItem('shortUrl', board.shortUrl);
                 app.boardID = board.id;
                 app.shortUrl = board.shortUrl;
                 openHasBoard();
@@ -338,13 +339,11 @@ $(document).ready(function() {
               }
               else {
                 $('.recipes__item').removeClass('active');
-                $(this).addClass('active')
+                $(this).addClass('active');
                 let id = $(this).data('id');
-                console.log('id', id);
                 $('.checklist__item')
                   .removeClass('checklist__item--highlighted')
-                  .each(function(key, item) {
-                    console.log('id', $(this).find('input').data('idCard'));
+                  .each(function() {
                     if ($(this).find('input').data('idCard') == id) {
                       $(this).addClass('checklist__item--highlighted');
                     }
@@ -406,7 +405,6 @@ $(document).ready(function() {
             .addClass('checklist__title')
             .text(checklist.name));
           $.each(checklist.items, (key, item) => {
-            console.log('item', item);
             let $input = $('<input>')
               .attr('type', 'checkbox')
               .addClass('filled-in')
@@ -444,17 +442,6 @@ $(document).ready(function() {
   let removeMeasurements = (str) => {
     return str.replace(/^[^a-zA-Z]+(cups|cup|tin|tins|can|cans|ounce|ounces|gram|grams|liter|liters|litre|litres|quart|gallon|pint|tablespoon|tablespoons|teaspoon|teaspoons|tsp|bunch|clove|cloves|sliced|chopped)*[^a-zA-Z]+/g, '');
   };
-
-  //
-  // Reset board & shopping list.
-  //
-
-  $('.modal').modal();
-
-  $('.modal-reset').on('click', function(e) {
-    e.preventDefault();
-    console.log('Reset board.');
-  });
 
   //
   // Extra items.
@@ -593,12 +580,25 @@ $(document).ready(function() {
   };
 
   //
+  // Reset board & shopping list.
+  //
+
+  $('.modal').modal();
+
+  $('.modal-reset').on('click', function(e) {
+    e.preventDefault();
+    $('.checklist__item input:checked').click();
+    console.log('Reset board.');
+  });
+
+  //
   // Log out.
   //
   $('.log-out').on('click', function(e) {
     e.preventDefault();
     Trello.deauthorize();
     localStorage.removeItem('boardID');
+    localStorage.removeItem('shortUrl');
     openAuthenticate();
   });
 
