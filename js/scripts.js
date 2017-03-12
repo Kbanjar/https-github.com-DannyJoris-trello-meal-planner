@@ -199,7 +199,6 @@ $(document).ready(function() {
       });
       return Trello.post('/cards/', {
         name: 'RECIPE TEMPLATE',
-        desc: 'Use this card as a template when adding new recipes. Press the copy button, give it a title and make sure to keep the checklists.',
         idList: app.recipesListID
       });
     })
@@ -311,6 +310,9 @@ $(document).ready(function() {
         app.checklist.allowedListNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         app.checklist.allowedListIDs = [];
         $.each(response, (key, list) => {
+          if (list.name === 'Recipes') {
+            app.recipesListID = list.id;
+          }
           if (app.checklist.allowedListNames.indexOf(list.name) != -1) {
             app.checklist.allowedListIDs.push(list.id);
           }
@@ -595,13 +597,20 @@ $(document).ready(function() {
   //
   // Reset board & shopping list.
   //
-
   $('.modal').modal();
 
   $('.modal-reset').on('click', function(e) {
     e.preventDefault();
     $('.checklist__item input:checked').click();
-    console.log('Reset board.');
+    let deferreds = [];
+    $.each(app.checklist.recipes, (key, recipe) => {
+      deferreds.push(Trello.put(`/cards/${recipe.id}/idList`, { value: app.recipesListID }));
+    });
+    $.when.apply($, deferreds)
+      .done(() => {
+        $('.refresh-board').click();
+        console.log('Board reset.');
+      });
   });
 
   //
