@@ -132,6 +132,7 @@ $(document).ready(function() {
     // Create board API call.
     startBoardProgress();
     boardProgress(0);
+    $('.create-board__select').addClass('hide');
     Trello.post('/boards', {
       name: 'Meal Planner',
       defaultLabels: false,
