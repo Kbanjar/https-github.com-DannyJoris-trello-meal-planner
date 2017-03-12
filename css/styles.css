@@ -81,3 +81,9 @@ main {
 .extra-items__item {
   margin-bottom: 3px;
 }
+
+.checklist__item--highlighted,
+.extra-items__item--highlighted,
+.recipes__item--highlighted {
+  background-color: #ffffe0;
+}

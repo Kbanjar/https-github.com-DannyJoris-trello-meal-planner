@@ -326,9 +326,31 @@ $(document).ready(function() {
         $.each(response, (key, recipe) => {
           recipes.push($('<a>')
             .attr('href', '#')
+            .addClass('recipes__item')
             .addClass('collection-item')
             .data('id', recipe.id)
-            .text(recipe.name));
+            .text(recipe.name)
+            .on('click', function(e) {
+              e.preventDefault();
+              if ($(this).hasClass('active')) {
+                $(this).removeClass('active');
+                $('.checklist__item').removeClass('checklist__item--highlighted');
+              }
+              else {
+                $('.recipes__item').removeClass('active');
+                $(this).addClass('active')
+                let id = $(this).data('id');
+                console.log('id', id);
+                $('.checklist__item')
+                  .removeClass('checklist__item--highlighted')
+                  .each(function(key, item) {
+                    console.log('id', $(this).find('input').data('idCard'));
+                    if ($(this).find('input').data('idCard') == id) {
+                      $(this).addClass('checklist__item--highlighted');
+                    }
+                  });
+              }
+            }));
         });
         $('.recipes').html('').append(recipes);
         return response;
@@ -384,10 +406,12 @@ $(document).ready(function() {
             .addClass('checklist__title')
             .text(checklist.name));
           $.each(checklist.items, (key, item) => {
+            console.log('item', item);
             let $input = $('<input>')
               .attr('type', 'checkbox')
               .addClass('filled-in')
               .attr('id', item.id)
+              .data('idCard', item.idCard)
               .prop('checked', () => item.state == 'complete')
               .on('change', function() { // For some reason () => {} breaks the "this" variable.
                 Trello.put(`/cards/${item.idCard}/checklist/${item.idChecklist}/checkItem/${item.id}/state`, {
@@ -413,14 +437,13 @@ $(document).ready(function() {
       });
   };
 
+  //
+  // Remove measurements from string.
+  //
   // @TODO could be improved.
   let removeMeasurements = (str) => {
     return str.replace(/^[^a-zA-Z]+(cups|cup|tin|tins|can|cans|ounce|ounces|gram|grams|liter|liters|litre|litres|quart|gallon|pint|tablespoon|tablespoons|teaspoon|teaspoons|tsp|bunch|clove|cloves|sliced|chopped)*[^a-zA-Z]+/g, '');
   };
-
-  //
-  // Update card values.
-  //
 
   //
   // Reset board & shopping list.
