@@ -400,6 +400,7 @@ $(document).ready(function() {
               .attr('for', item.id)
               .text(item.name);
             let $wrapper = $('<div></div>')
+              .addClass('checklist__item')
               .append($input)
               .append($label);
             $checklists.push($wrapper);
@@ -464,6 +465,7 @@ $(document).ready(function() {
       let extraItems = JSON.parse(localStorage.getItem('extraItems'));
       $.each(extraItems, (key, item) => {
         let $checkbox = $('<div></div>')
+          .addClass('extra-items__item')
           .append(`<input type="checkbox" class="filled-in" id="extra-item__item-${key}" ${item.checked ? 'checked="checked"': ""}/>`)
           .append(`<label for="extra-item__item-${key}">${item.value}</label>`);
         $('.extra-items__checklist').append($checkbox);

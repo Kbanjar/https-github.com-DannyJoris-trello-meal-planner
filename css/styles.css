@@ -1,6 +1,6 @@
 @media only screen and (min-width: 0) {
   html {
-    font-size: 16px;
+    font-size: 18px;
   }
 }
 
@@ -17,6 +17,7 @@ main {
 
 .page-title {
   font-size: 32px;
+  margin-bottom: 0;
 }
 
 .create-board__select {
@@ -46,6 +47,7 @@ main {
 }
 
 .authenticate {
+  margin-top: 30px;
   padding-bottom: 45px;
 }
 
@@ -54,6 +56,7 @@ main {
 }
 
 .create-board {
+  margin-top: 30px;
   padding-bottom: 45px;
 }
 
@@ -63,4 +66,18 @@ main {
 
 .create-board__progress {
   margin-top: 65px;
+}
+
+[type="checkbox"].filled-in:checked+label:before,
+[type="checkbox"].filled-in:checked+label:after,
+[type="checkbox"].filled-in+label:before,
+[type="checkbox"].filled-in+label:after,
+[type="checkbox"].filled-in:not(:checked)+label:before,
+[type="checkbox"].filled-in:not(:checked)+label:after {
+  top: 3px;
+}
+
+.checklist__item,
+.extra-items__item {
+  margin-bottom: 3px;
 }
