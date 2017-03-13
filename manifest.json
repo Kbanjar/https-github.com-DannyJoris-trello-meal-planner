@@ -3,7 +3,7 @@
   "short_name": "Meal Planner",
   "lang": "en",
   "dir": "ltr",
-  "start_url": "./trello-meal-planner/",
+  "start_url": "index.html",
   "display": "standalone",
   ​​"orientation": "portrait-primary",
   "background_color": "#80cbc4",
