@@ -89,12 +89,19 @@ main {
   margin-bottom: 3px;
 }
 
+.checklist__item--highlighted,
+.extra-items__item--highlighted,
+.recipes__item--highlighted {
+  background-color: #ffffe0;
+}
+
 .checklist__item label,
 .extra-items__item label {
   opacity: 0;
   animation: fadeIn .5s linear forwards;
 }
 
+.recipes__item,
 .recipes__title,
 .checklist__title,
 .extra-items__title,
@@ -103,12 +110,6 @@ main {
 .board {
   opacity: 0;
   animation: fadeIn .5s linear forwards;
-}
-
-.checklist__item--highlighted,
-.extra-items__item--highlighted,
-.recipes__item--highlighted {
-  background-color: #ffffe0;
 }
 
 @keyframes fadeIn {
