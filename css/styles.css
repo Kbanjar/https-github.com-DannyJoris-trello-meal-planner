@@ -105,6 +105,7 @@ main {
   animation: fadeIn .5s linear forwards;
 }
 
+.extra-items__empty,
 .recipes__item,
 .recipes__title,
 .checklist__title,
