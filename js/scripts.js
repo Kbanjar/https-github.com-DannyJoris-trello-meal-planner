@@ -44,7 +44,7 @@ $(document).ready(function() {
       $('.authenticate__link').on('click', function(e) {
         e.preventDefault();
         Trello.authorize({
-          type: 'redirect',
+          type: 'popup',
           name: 'Trello Meal Planner',
           scope: {
             read: 'true',
