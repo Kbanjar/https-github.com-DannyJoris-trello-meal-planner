@@ -353,14 +353,14 @@ $(document).ready(function() {
             }));
         });
         if (app.checklist.recipes.length !== 0) {
-          $('.recipes')
+          $('.recipes__list')
             .removeClass('hide')
             .html('')
             .append(recipes);
           $('.recipes__empty').addClass('hide');
         }
         else {
-          $('.recipes')
+          $('.recipes__list')
             .html('')
             .addClass('hide');
           $('.recipes__empty')

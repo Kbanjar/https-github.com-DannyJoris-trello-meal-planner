@@ -29,9 +29,13 @@ main {
   font-size: 20px;
 }
 
-.checklist__actions,
 .extra-items__actions {
   margin-top: 20px;
+}
+
+.checklist__actions {
+  margin-top: 30px;
+  margin-bottom: 10px;
 }
 
 .extra-items__empty {
