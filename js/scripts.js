@@ -483,7 +483,16 @@ $(document).ready(function() {
   // ]
   let updateExtraItemsList = () => {
     if (!localStorage.getItem('extraItems')) {
-      $('.extra-items__checklist').html('<p>No extra items yet.</p>')
+      $('.extra-items__checklist')
+        .html('')
+        .append($('<p></p>')
+          .addClass('extra-items__empty')
+          .text('No extra items yet.')
+          .on('click', function(e) {
+            e.preventDefault();
+            toggleExtraItems();
+            updateExtraItemsTextarea();
+          }));
     } else {
       // Populate checklist.
       $('.extra-items__checklist').empty();
@@ -539,7 +548,6 @@ $(document).ready(function() {
     e.preventDefault();
     toggleExtraItems();
     updateExtraItemsTextarea();
-
   });
 
   // Extra items cancel.

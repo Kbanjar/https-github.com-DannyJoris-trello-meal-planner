@@ -17,7 +17,6 @@ main {
 
 .page-title {
   font-size: 32px;
-  margin-bottom: 0;
 }
 
 .create-board__select {
@@ -33,6 +32,14 @@ main {
 .checklist__actions,
 .extra-items__actions {
   margin-top: 20px;
+}
+
+.extra-items__empty {
+  cursor: pointer;
+}
+
+.extra-items__empty:hover {
+  background-color: #ffffe0;
 }
 
 .button-icon-trello {
