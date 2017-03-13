@@ -1,7 +1,8 @@
 {
   "name": "Trello Meal Planner",
   "short_name": "Meal Planner",
-  "lang": "en-US",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": ".",
   "display": "standalone",
   ​​"orientation": "portrait-primary",
