@@ -55,18 +55,25 @@ $(document).ready(function() {
     {checklist: CHECKLIST_GRAINS, name: '16 jumbo pasta shells, cooked according to package directions'},
     {checklist: CHECKLIST_CANNED, name: '1 1/2 cups marinara sauce, divided'}
   ];
-
-  if (localStorage.getItem(LOCALSTORAGE_BOARD_ID)) {
-    app.boardID = localStorage.getItem(LOCALSTORAGE_BOARD_ID);
+  // Helper functions.
+  function setItem(key, value) {
+    localStorage.setItem(key, value);
   }
-  if (localStorage.getItem(LOCALSTORAGE_SHORT_URL)) {
-    app.shortUrl = localStorage.getItem(LOCALSTORAGE_SHORT_URL);
+  function getItem(key, value) {
+    return localStorage.getItem(key, value);
+  }
+
+  if (getItem(LOCALSTORAGE_BOARD_ID)) {
+    app.boardID = getItem(LOCALSTORAGE_BOARD_ID);
+  }
+  if (getItem(LOCALSTORAGE_SHORT_URL)) {
+    app.shortUrl = getItem(LOCALSTORAGE_SHORT_URL);
   }
 
   // Include Trello client script.
   let trelloClient = 'https://trello.com/1/client.js?key=caf98b855b223644b58b7916f7649bca';
-  if (localStorage.getItem(LOCALSTORAGE_TRELLO_TOKEN)) {
-    trelloClient += `&token=${localStorage.getItem(LOCALSTORAGE_TRELLO_TOKEN)}`;
+  if (getItem(LOCALSTORAGE_TRELLO_TOKEN)) {
+    trelloClient += `&token=${getItem(LOCALSTORAGE_TRELLO_TOKEN)}`;
   }
   $.getScript(trelloClient)
     .done(( script, textStatus ) => {
@@ -135,8 +142,8 @@ $(document).ready(function() {
               .text(board.name)
               .on('click', function(e) {
                 e.preventDefault();
-                localStorage.setItem(LOCALSTORAGE_BOARD_ID, board.id);
-                localStorage.setItem(LOCALSTORAGE_SHORT_URL, board.shortUrl);
+                setItem(LOCALSTORAGE_BOARD_ID, board.id);
+                setItem(LOCALSTORAGE_SHORT_URL, board.shortUrl);
                 app.boardID = board.id;
                 app.shortUrl = board.shortUrl;
                 openHasBoard();
@@ -157,8 +164,8 @@ $(document).ready(function() {
   };
 
   let ifBoardExists = () => {
-    if (localStorage.getItem(LOCALSTORAGE_BOARD_ID)) {
-      Trello.get(`/board/${localStorage.getItem(LOCALSTORAGE_BOARD_ID)}`)
+    if (getItem(LOCALSTORAGE_BOARD_ID)) {
+      Trello.get(`/board/${getItem(LOCALSTORAGE_BOARD_ID)}`)
         .done((response) => {
           openHasBoard();
         })
@@ -189,9 +196,9 @@ $(document).ready(function() {
       boardProgress(15);
       console.log('Board created');
       app.boardID = response.id;
-      localStorage.setItem(LOCALSTORAGE_BOARD_ID, response.id);
+      setItem(LOCALSTORAGE_BOARD_ID, response.id);
       app.shortUrl = response.shortUrl;
-      localStorage.setItem(LOCALSTORAGE_SHORT_URL, response.shortUrl);
+      setItem(LOCALSTORAGE_SHORT_URL, response.shortUrl);
       let deferreds = [];
       $.each(DEFAULT_LABELS, (key, label) => {
         deferreds.push(Trello.post(`/boards/${app.boardID}/labels`, {color: label.color, name: label.name}));
@@ -213,11 +220,11 @@ $(document).ready(function() {
       $.each(response, (key, list) => {
         if (list.name === 'Recipes') {
           app.recipesListID = list.id;
-          localStorage.setItem(LOCALSTORAGE_RECIPES_LIST_ID, app.recipesListID);
+          setItem(LOCALSTORAGE_RECIPES_LIST_ID, app.recipesListID);
         }
         if (list.name === 'Monday') {
           app.mondayListID = list.id;
-          localStorage.setItem(LOCALSTORAGE_MONDAY_LIST_ID, app.mondayListID);
+          setItem(LOCALSTORAGE_MONDAY_LIST_ID, app.mondayListID);
         }
       });
       return Trello.post('/cards/', {
@@ -228,7 +235,7 @@ $(document).ready(function() {
     .then(response => {
       boardProgress(60);
       app.templateCardID = response.id;
-      localStorage.setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, app.templateCardID);
+      setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, app.templateCardID);
 
       // Add checklists.
       return Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
@@ -326,7 +333,7 @@ $(document).ready(function() {
             app.checklist.allowedListIDs.push(list.id);
           }
         });
-        localStorage.setItem(LOCALSTORAGE_ALLOWED_LIST_IDS, JSON.stringify(app.checklist.allowedListIDs));
+        setItem(LOCALSTORAGE_ALLOWED_LIST_IDS, JSON.stringify(app.checklist.allowedListIDs));
         return app.checklist.allowedListIDs;
       })
       .then(response => Trello.get(`/boards/${app.boardID}/cards`, {fields: ['name', 'idList', 'idChecklist']}))
@@ -476,9 +483,9 @@ $(document).ready(function() {
     $('.extra-items__list').find(':checkbox').each((key, value) => {
       $(value).on('change', function(e) {
         e.preventDefault();
-        let extraItems = JSON.parse(localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS));
+        let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
         extraItems[key].checked = $(value).is(':checked');
-        localStorage.setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItems));
+        setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItems));
       });
     });
   };
@@ -491,7 +498,7 @@ $(document).ready(function() {
   //   }
   // ]
   let updateExtraItemsList = () => {
-    if (!localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
+    if (!getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
       $('.extra-items__checklist')
         .html('')
         .append($('<p></p>')
@@ -505,7 +512,7 @@ $(document).ready(function() {
     } else {
       // Populate checklist.
       $('.extra-items__checklist').empty();
-      let extraItems = JSON.parse(localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS));
+      let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
       $.each(extraItems, (key, item) => {
         let $checkbox = $('<div></div>')
           .addClass('extra-items__item')
@@ -521,12 +528,12 @@ $(document).ready(function() {
 
   // Update extra items textarea.
   let updateExtraItemsTextarea = () => {
-    if (!localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
+    if (!getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
       $('#extra-items__textarea').val('');
     }
     else {
       let extraItemsTextareaVal = '';
-      let extraItems = JSON.parse(localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS));
+      let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
       $.each(extraItems, (key, item) => {
         if (item.checked) {
           extraItemsTextareaVal += '- [x] ';
@@ -582,10 +589,10 @@ $(document).ready(function() {
           checked: checked
         }
       });
-      localStorage.setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItemsStorage));
+      setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItemsStorage));
     }
     else {
-      localStorage.setItem(LOCALSTORAGE_EXTRA_ITEMS, '');
+      setItem(LOCALSTORAGE_EXTRA_ITEMS, '');
     }
 
     toggleExtraItems();
