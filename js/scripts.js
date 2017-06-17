@@ -1,6 +1,7 @@
 $(document).ready(function() {
 
   let app = {};
+  // Checklist strings.
   const CHECKLIST_ON_HAND = 'Things you probably have on hand';
   const CHECKLIST_PRODUCE = 'Fresh produce';
   const CHECKLIST_DAIRY = 'Dairy & other refrigerated items';
@@ -8,18 +9,64 @@ $(document).ready(function() {
   const CHECKLIST_CANNED = 'Canned & jarred goods';
   const CHECKLIST_MEAT = 'Meat & alternatives';
   const CHECKLIST_OTHER = 'Everything else';
+  // Localstorage keys.
+  const LOCALSTORAGE_BOARD_ID = 'boardID';
+  const LOCALSTORAGE_SHORT_URL = 'shortUrl';
+  const LOCALSTORAGE_TRELLO_TOKEN = 'trello_token';
+  const LOCALSTORAGE_RECIPES_LIST_ID = 'recipesListID';
+  const LOCALSTORAGE_MONDAY_LIST_ID = 'mondayListID';
+  const LOCALSTORAGE_TEMPLATE_CARD_ID = 'templateCardID';
+  const LOCALSTORAGE_ALLOWED_LIST_IDS = 'allowedListIDs';
+  const LOCALSTORAGE_EXTRA_ITEMS = 'extraItems';
+  // Other.
+  const DEFAULT_LABELS = [
+    {color: 'green', name: 'Baked goods'},
+    {color: 'yellow', name: 'Breakfast'},
+    {color: 'orange', name: 'Lunch'},
+    {color: 'red', name: 'Mains'},
+    {color: 'purple', name: 'Dessert'},
+    {color: 'blue', name: 'Dips, dressings & sauces'},
+    {color: 'sky', name: 'Soups & stews'},
+    {color: 'lime', name: 'Salads & sides'},
+    {color: 'pink', name: 'Drinks'},
+    {color: 'black', name: 'Other'}
+  ];
+  const DEFAULT_LISTS = [
+    {name: "Recipes", pos: 1},
+    {name: "Monday", pos: 2},
+    {name: "Tuesday", pos: 3},
+    {name: "Wednesday", pos: 4},
+    {name: "Thursday", pos: 5},
+    {name: "Friday", pos: 6},
+    {name: "Saturday", pos: 7},
+    {name: "Sunday", pos: 8},
+  ];
+  const DEFAULT_INGREDIENTS = [
+    {checklist: CHECKLIST_ON_HAND, name: '1 tablespoon olive oil'},
+    {checklist: CHECKLIST_ON_HAND, name: 'Salt and pepper to taste'},
+    {checklist: CHECKLIST_ON_HAND, name: '2 teaspoons Italian seasoning'},
+    {checklist: CHECKLIST_PRODUCE, name: '3 cloves garlic, minced'},
+    {checklist: CHECKLIST_PRODUCE, name: '8 ounces sliced cremini mushrooms'},
+    {checklist: CHECKLIST_PRODUCE, name: '1 bunch (about 8 ounces) Swiss chard, stems discarded and leaves coarsely chopped'},
+    {checklist: CHECKLIST_DAIRY, name: '1 (15-ounce) container ricotta cheese'},
+    {checklist: CHECKLIST_DAIRY, name: '1/2 cup shredded mozzarella cheese'},
+    {checklist: CHECKLIST_DAIRY, name: '1/2 cup shredded Parmesan cheese'},
+    {checklist: CHECKLIST_DAIRY, name: '1 egg, lightly beaten'},
+    {checklist: CHECKLIST_GRAINS, name: '16 jumbo pasta shells, cooked according to package directions'},
+    {checklist: CHECKLIST_CANNED, name: '1 1/2 cups marinara sauce, divided'}
+  ];
 
-  if (localStorage.getItem('boardID')) {
-    app.boardID = localStorage.getItem('boardID');
+  if (localStorage.getItem(LOCALSTORAGE_BOARD_ID)) {
+    app.boardID = localStorage.getItem(LOCALSTORAGE_BOARD_ID);
   }
-  if (localStorage.getItem('shortUrl')) {
-    app.shortUrl = localStorage.getItem('shortUrl');
+  if (localStorage.getItem(LOCALSTORAGE_SHORT_URL)) {
+    app.shortUrl = localStorage.getItem(LOCALSTORAGE_SHORT_URL);
   }
 
   // Include Trello client script.
   let trelloClient = 'https://trello.com/1/client.js?key=caf98b855b223644b58b7916f7649bca';
-  if (localStorage.getItem('trello_token')) {
-    trelloClient += `&token=${localStorage.getItem('trello_token')}`;
+  if (localStorage.getItem(LOCALSTORAGE_TRELLO_TOKEN)) {
+    trelloClient += `&token=${localStorage.getItem(LOCALSTORAGE_TRELLO_TOKEN)}`;
   }
   $.getScript(trelloClient)
     .done(( script, textStatus ) => {
@@ -88,8 +135,8 @@ $(document).ready(function() {
               .text(board.name)
               .on('click', function(e) {
                 e.preventDefault();
-                localStorage.setItem('boardID', board.id);
-                localStorage.setItem('shortUrl', board.shortUrl);
+                localStorage.setItem(LOCALSTORAGE_BOARD_ID, board.id);
+                localStorage.setItem(LOCALSTORAGE_SHORT_URL, board.shortUrl);
                 app.boardID = board.id;
                 app.shortUrl = board.shortUrl;
                 openHasBoard();
@@ -110,8 +157,8 @@ $(document).ready(function() {
   };
 
   let ifBoardExists = () => {
-    if (localStorage.getItem('boardID')) {
-      Trello.get(`/board/${localStorage.getItem('boardID')}`)
+    if (localStorage.getItem(LOCALSTORAGE_BOARD_ID)) {
+      Trello.get(`/board/${localStorage.getItem(LOCALSTORAGE_BOARD_ID)}`)
         .done((response) => {
           openHasBoard();
         })
@@ -142,36 +189,14 @@ $(document).ready(function() {
       boardProgress(15);
       console.log('Board created');
       app.boardID = response.id;
-      localStorage.setItem('boardID', response.id);
+      localStorage.setItem(LOCALSTORAGE_BOARD_ID, response.id);
       app.shortUrl = response.shortUrl;
-      localStorage.setItem('shortUrl', response.shortUrl);
+      localStorage.setItem(LOCALSTORAGE_SHORT_URL, response.shortUrl);
       let deferreds = [];
-      let labels = [
-        {color: 'green', name: 'Baked goods'},
-        {color: 'yellow', name: 'Breakfast'},
-        {color: 'orange', name: 'Lunch'},
-        {color: 'red', name: 'Mains'},
-        {color: 'purple', name: 'Dessert'},
-        {color: 'blue', name: 'Dips, dressings & sauces'},
-        {color: 'sky', name: 'Soups & stews'},
-        {color: 'lime', name: 'Salads & sides'},
-        {color: 'pink', name: 'Drinks'},
-        {color: 'black', name: 'Other'}
-      ];
-      let lists = [
-        {name: "Recipes", pos: 1},
-        {name: "Monday", pos: 2},
-        {name: "Tuesday", pos: 3},
-        {name: "Wednesday", pos: 4},
-        {name: "Thursday", pos: 5},
-        {name: "Friday", pos: 6},
-        {name: "Saturday", pos: 7},
-        {name: "Sunday", pos: 8},
-      ];
-      $.each(labels, (key, label) => {
+      $.each(DEFAULT_LABELS, (key, label) => {
         deferreds.push(Trello.post(`/boards/${app.boardID}/labels`, {color: label.color, name: label.name}));
       });
-      $.each(lists, (key, list) => {
+      $.each(DEFAULT_LISTS, (key, list) => {
         deferreds.push(Trello.post(`/boards/${app.boardID}/lists`, {name: list.name, pos: list.pos}));
       });
       return $.when.apply($, deferreds)
@@ -185,16 +210,14 @@ $(document).ready(function() {
     })
     .then(response => {
       boardProgress(50);
-      let recipesListID;
-      let mondayListID;
       $.each(response, (key, list) => {
         if (list.name === 'Recipes') {
           app.recipesListID = list.id;
-          localStorage.setItem('recipesListID', app.recipesListID);
+          localStorage.setItem(LOCALSTORAGE_RECIPES_LIST_ID, app.recipesListID);
         }
         if (list.name === 'Monday') {
           app.mondayListID = list.id;
-          localStorage.setItem('mondayListID', app.mondayListID);
+          localStorage.setItem(LOCALSTORAGE_MONDAY_LIST_ID, app.mondayListID);
         }
       });
       return Trello.post('/cards/', {
@@ -205,7 +228,7 @@ $(document).ready(function() {
     .then(response => {
       boardProgress(60);
       app.templateCardID = response.id;
-      localStorage.setItem('templateCardID', app.templateCardID);
+      localStorage.setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, app.templateCardID);
 
       // Add checklists.
       return Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
@@ -250,21 +273,7 @@ $(document).ready(function() {
         checklist.name === CHECKLIST_CANNED && checklist.idCard === app.recipeCardID)[0].id;
 
       let deferreds = [];
-      let ingredients = [
-        {checklist: app.recipeChecklists.onHand, name: '1 tablespoon olive oil'},
-        {checklist: app.recipeChecklists.onHand, name: 'Salt and pepper to taste'},
-        {checklist: app.recipeChecklists.onHand, name: '2 teaspoons Italian seasoning'},
-        {checklist: app.recipeChecklists.produce, name: '3 cloves garlic, minced'},
-        {checklist: app.recipeChecklists.produce, name: '8 ounces sliced cremini mushrooms'},
-        {checklist: app.recipeChecklists.produce, name: '1 bunch (about 8 ounces) Swiss chard, stems discarded and leaves coarsely chopped'},
-        {checklist: app.recipeChecklists.dairy, name: '1 (15-ounce) container ricotta cheese'},
-        {checklist: app.recipeChecklists.dairy, name: '1/2 cup shredded mozzarella cheese'},
-        {checklist: app.recipeChecklists.dairy, name: '1/2 cup shredded Parmesan cheese'},
-        {checklist: app.recipeChecklists.dairy, name: '1 egg, lightly beaten'},
-        {checklist: app.recipeChecklists.grains, name: '16 jumbo pasta shells, cooked according to package directions'},
-        {checklist: app.recipeChecklists.canned, name: '1 1/2 cups marinara sauce, divided'}
-      ];
-      $.each(ingredients, (key, ingredient) => {
+      $.each(DEFAULT_INGREDIENTS, (key, ingredient) => {
         deferreds.push(Trello.post(`/cards/${app.recipeCardID}/checklist/${ingredient.checklist}/checkItem`, {
           idChecklist: ingredient.checklist,
           name: ingredient.name
@@ -317,7 +326,7 @@ $(document).ready(function() {
             app.checklist.allowedListIDs.push(list.id);
           }
         });
-        localStorage.setItem('allowedListIDs', JSON.stringify(app.checklist.allowedListIDs));
+        localStorage.setItem(LOCALSTORAGE_ALLOWED_LIST_IDS, JSON.stringify(app.checklist.allowedListIDs));
         return app.checklist.allowedListIDs;
       })
       .then(response => Trello.get(`/boards/${app.boardID}/cards`, {fields: ['name', 'idList', 'idChecklist']}))
@@ -467,9 +476,9 @@ $(document).ready(function() {
     $('.extra-items__list').find(':checkbox').each((key, value) => {
       $(value).on('change', function(e) {
         e.preventDefault();
-        let extraItems = JSON.parse(localStorage.getItem('extraItems'));
+        let extraItems = JSON.parse(localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS));
         extraItems[key].checked = $(value).is(':checked');
-        localStorage.setItem('extraItems', JSON.stringify(extraItems));
+        localStorage.setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItems));
       });
     });
   };
@@ -482,7 +491,7 @@ $(document).ready(function() {
   //   }
   // ]
   let updateExtraItemsList = () => {
-    if (!localStorage.getItem('extraItems')) {
+    if (!localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
       $('.extra-items__checklist')
         .html('')
         .append($('<p></p>')
@@ -496,7 +505,7 @@ $(document).ready(function() {
     } else {
       // Populate checklist.
       $('.extra-items__checklist').empty();
-      let extraItems = JSON.parse(localStorage.getItem('extraItems'));
+      let extraItems = JSON.parse(localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS));
       $.each(extraItems, (key, item) => {
         let $checkbox = $('<div></div>')
           .addClass('extra-items__item')
@@ -512,12 +521,12 @@ $(document).ready(function() {
 
   // Update extra items textarea.
   let updateExtraItemsTextarea = () => {
-    if (!localStorage.getItem('extraItems')) {
+    if (!localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
       $('#extra-items__textarea').val('');
     }
     else {
       let extraItemsTextareaVal = '';
-      let extraItems = JSON.parse(localStorage.getItem('extraItems'));
+      let extraItems = JSON.parse(localStorage.getItem(LOCALSTORAGE_EXTRA_ITEMS));
       $.each(extraItems, (key, item) => {
         if (item.checked) {
           extraItemsTextareaVal += '- [x] ';
@@ -573,10 +582,10 @@ $(document).ready(function() {
           checked: checked
         }
       });
-      localStorage.setItem('extraItems', JSON.stringify(extraItemsStorage));
+      localStorage.setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItemsStorage));
     }
     else {
-      localStorage.setItem('extraItems', '');
+      localStorage.setItem(LOCALSTORAGE_EXTRA_ITEMS, '');
     }
 
     toggleExtraItems();
@@ -627,8 +636,8 @@ $(document).ready(function() {
   $('.log-out').on('click', function(e) {
     e.preventDefault();
     Trello.deauthorize();
-    localStorage.removeItem('boardID');
-    localStorage.removeItem('shortUrl');
+    localStorage.removeItem(LOCALSTORAGE_BOARD_ID);
+    localStorage.removeItem(LOCALSTORAGE_SHORT_URL);
     openAuthenticate();
   });
 
