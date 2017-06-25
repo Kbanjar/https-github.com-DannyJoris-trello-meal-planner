@@ -19,6 +19,7 @@ $(document).ready(function() {
   const LOCALSTORAGE_ALLOWED_LIST_IDS = 'allowedListIDs';
   const LOCALSTORAGE_EXTRA_ITEMS = 'extraItems';
   // Other.
+  const DEFAULT_BOARD_NAME = 'Meal Planner';
   const DEFAULT_LABELS = [
     {color: 'green', name: 'Baked goods'},
     {color: 'yellow', name: 'Breakfast'},
@@ -41,7 +42,10 @@ $(document).ready(function() {
     {name: "Saturday", pos: 7},
     {name: "Sunday", pos: 8},
   ];
-  const DEFAULT_INGREDIENTS = [
+  const DEFAULT_RECIPE_NAME = 'Cremini and chard stuffed shells';
+  const DEFAULT_RECIPE_DESC = 'Vegetarian stuffed shells filled with ricotta cheese, cremini mushrooms, and Swiss chard.';
+  const DEFAULT_RECIPE_URL = 'http://ohmyveggies.com/recipe-cremini-and-chard-stuffed-shells/';
+  const DEFAULT_RECIPE_INGREDIENTS = [
     {checklist: CHECKLIST_ON_HAND, name: '1 tablespoon olive oil'},
     {checklist: CHECKLIST_ON_HAND, name: 'Salt and pepper to taste'},
     {checklist: CHECKLIST_ON_HAND, name: '2 teaspoons Italian seasoning'},
@@ -58,11 +62,17 @@ $(document).ready(function() {
   // Helper functions.
   function setItem(key, value) {
     localStorage.setItem(key, value);
+    return value;
   }
-  function getItem(key, value) {
-    return localStorage.getItem(key, value);
+  function getItem(key) {
+    return localStorage.getItem(key);
+  }
+  function removeItem(key) {
+    localStorage.removeItem(key);
+    delete app[key];
   }
 
+  // Get stored values.
   if (getItem(LOCALSTORAGE_BOARD_ID)) {
     app.boardID = getItem(LOCALSTORAGE_BOARD_ID);
   }
@@ -83,9 +93,9 @@ $(document).ready(function() {
       console.error('Failed to load Trello client.');
     });
 
-  //
-  // Check if authorized.
-  //
+  /**
+   * Check if authorized.
+   */
   let appInit = () => {
     if (!Trello.authorized()) {
       openAuthenticate();
@@ -142,10 +152,8 @@ $(document).ready(function() {
               .text(board.name)
               .on('click', function(e) {
                 e.preventDefault();
-                setItem(LOCALSTORAGE_BOARD_ID, board.id);
-                setItem(LOCALSTORAGE_SHORT_URL, board.shortUrl);
-                app.boardID = board.id;
-                app.shortUrl = board.shortUrl;
+                app.boardID = setItem(LOCALSTORAGE_BOARD_ID, board.id);
+                app.shortUrl = setItem(LOCALSTORAGE_SHORT_URL, board.shortUrl);
                 openHasBoard();
               }));
           }
@@ -178,27 +186,25 @@ $(document).ready(function() {
     }
   };
 
-  //
-  // Create board.
-  //
+  /**
+   * Create board.
+   */
   $('.create-board__link').on('click', function(e) {
     e.preventDefault();
     $(this).addClass('disabled');
+    $('.create-board__select').addClass('hide');
     // Create board API call.
     startBoardProgress();
     boardProgress(0);
-    $('.create-board__select').addClass('hide');
     Trello.post('/boards', {
-      name: 'Meal Planner',
+      name: DEFAULT_BOARD_NAME,
       defaultLabels: false,
       defaultLists: false
     }).then(response => {
       boardProgress(15);
       console.log('Board created');
-      app.boardID = response.id;
-      setItem(LOCALSTORAGE_BOARD_ID, response.id);
-      app.shortUrl = response.shortUrl;
-      setItem(LOCALSTORAGE_SHORT_URL, response.shortUrl);
+      app.boardID = setItem(LOCALSTORAGE_BOARD_ID, response.id);
+      app.shortUrl = setItem(LOCALSTORAGE_SHORT_URL, response.shortUrl);
       let deferreds = [];
       $.each(DEFAULT_LABELS, (key, label) => {
         deferreds.push(Trello.post(`/boards/${app.boardID}/labels`, {color: label.color, name: label.name}));
@@ -219,12 +225,10 @@ $(document).ready(function() {
       boardProgress(50);
       $.each(response, (key, list) => {
         if (list.name === 'Recipes') {
-          app.recipesListID = list.id;
-          setItem(LOCALSTORAGE_RECIPES_LIST_ID, app.recipesListID);
+          app.recipesListID = setItem(LOCALSTORAGE_RECIPES_LIST_ID, list.id);
         }
         if (list.name === 'Monday') {
-          app.mondayListID = list.id;
-          setItem(LOCALSTORAGE_MONDAY_LIST_ID, app.mondayListID);
+          app.mondayListID = setItem(LOCALSTORAGE_MONDAY_LIST_ID, list.id);
         }
       });
       return Trello.post('/cards/', {
@@ -234,8 +238,7 @@ $(document).ready(function() {
     })
     .then(response => {
       boardProgress(60);
-      app.templateCardID = response.id;
-      setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, app.templateCardID);
+      app.templateCardID = setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, response.id);
 
       // Add checklists.
       return Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
@@ -247,8 +250,8 @@ $(document).ready(function() {
     .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_MEAT}))
     .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_OTHER}))
     .then(() => Trello.post('/cards/', {
-      name: 'Cremini and chard stuffed shells',
-      desc: 'Vegetarian stuffed shells filled with ricotta cheese, cremini mushrooms, and Swiss chard.',
+      name: DEFAULT_RECIPE_NAME,
+      desc: DEFAULT_RECIPE_DESC,
       idList: app.mondayListID,
       idCardSource: app.templateCardID
     }))
@@ -256,7 +259,7 @@ $(document).ready(function() {
       boardProgress(70);
       app.recipeCardID = response.id;
       return Trello.post(`/cards/${response.id}/attachments`, {
-        url: 'http://ohmyveggies.com/recipe-cremini-and-chard-stuffed-shells/'
+        url: DEFAULT_RECIPE_URL
       });
     })
     .then(() => Trello.get(`/boards/${app.boardID}/labels`))
@@ -280,7 +283,7 @@ $(document).ready(function() {
         checklist.name === CHECKLIST_CANNED && checklist.idCard === app.recipeCardID)[0].id;
 
       let deferreds = [];
-      $.each(DEFAULT_INGREDIENTS, (key, ingredient) => {
+      $.each(DEFAULT_RECIPE_INGREDIENTS, (key, ingredient) => {
         deferreds.push(Trello.post(`/cards/${app.recipeCardID}/checklist/${ingredient.checklist}/checkItem`, {
           idChecklist: ingredient.checklist,
           name: ingredient.name
@@ -300,9 +303,12 @@ $(document).ready(function() {
     });
   });
 
-  //
-  // Create board progress.
-  //
+  /**
+   * Create board progress.
+   *
+   * @param progress
+   *   Integer between 0 and 100 to indicate a progress status.
+   */
   let boardProgress = (progress = 0) => {
     $('.create-board__determinate').css('width', `${progress}%`);
   };
@@ -315,9 +321,9 @@ $(document).ready(function() {
     $('.create-board__progress').addClass('hide');
   };
 
-  //
-  // Checklist init.
-  //
+  /**
+   * Checklist init.
+   */
   let checklistInit = () => {
     // Get lists.
     Trello.get(`/boards/${app.boardID}/lists`)
@@ -466,17 +472,23 @@ $(document).ready(function() {
       });
   };
 
-  //
-  // Remove measurements from string.
-  //
-  // @TODO could be improved.
+  /**
+   * Remove measurements from string to improve sorting.
+   *
+   * @param str
+   *   String to remove measurements from.
+   * @return {void|string|XML|*}
+   *  String without measurements.
+   *
+   * @TODO could be improved.
+   */
   let removeMeasurements = (str) => {
     return str.replace(/^[^a-zA-Z]+(cups|cup|tin|tins|can|cans|ounce|ounces|gram|grams|liter|liters|litre|litres|quart|gallon|pint|tablespoon|tablespoons|teaspoon|teaspoons|tsp|bunch|clove|cloves|sliced|chopped)*[^a-zA-Z]+/g, '');
   };
 
-  //
-  // Extra items.
-  //
+  /**
+   * Extra items.
+   */
 
   // Bind extra item change.
   let bindExtraItemsCheckbox = () => {
@@ -490,13 +502,16 @@ $(document).ready(function() {
     });
   };
 
-  // Populate extra items.
-  // [
-  //   {
-  //     value: 'Extra item',
-  //     checked: true
-  //   }
-  // ]
+  /**
+   * Populate extra items.
+   *
+   * [
+   *   {
+   *     value: 'Extra item',
+   *     checked: true
+   *   }
+   * ]
+   */
   let updateExtraItemsList = () => {
     if (!getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
       $('.extra-items__checklist')
@@ -524,9 +539,12 @@ $(document).ready(function() {
     }
   };
 
+  // Why is this here?
   updateExtraItemsList();
 
-  // Update extra items textarea.
+  /**
+   * Update extra items textarea.
+   */
   let updateExtraItemsTextarea = () => {
     if (!getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
       $('#extra-items__textarea').val('');
@@ -547,7 +565,9 @@ $(document).ready(function() {
     }
   };
 
-  // Toggle extra items.
+  /**
+   * Toggle extra items.
+   */
   let toggleExtraItems = () => {
     $('.extra-items__input').toggleClass('hide');
     $('.extra-items__list').toggleClass('hide');
@@ -559,20 +579,26 @@ $(document).ready(function() {
     }
   };
 
-  // Extra items edit.
+  /**
+   * Extra items edit.
+   */
   $('.extra-items__edit').on('click', function(e) {
     e.preventDefault();
     toggleExtraItems();
     updateExtraItemsTextarea();
   });
 
-  // Extra items cancel.
+  /**
+   * Extra items cancel.
+   */
   $('.extra-items__cancel').on('click', function(e) {
     e.preventDefault();
     toggleExtraItems();
   });
 
-  // Extra items save.
+  /**
+   * Extra items save.
+   */
   $('.extra-items__save').on('click', function(e) {
     e.preventDefault();
     // Store in localStorage.
@@ -599,17 +625,17 @@ $(document).ready(function() {
     updateExtraItemsList();
   });
 
-  //
-  // Refresh board
-  //
+  /**
+   * Refresh board.
+   */
   $('.refresh-board').on('click', function(e) {
     e.preventDefault();
     checklistInit();
   });
 
-  //
-  // Set Board Button.
-  //
+  /**
+   * Set Board Button.
+   */
   let setBoardButton = () => {
     if (app.shortUrl) {
       $('.open-board')
@@ -618,9 +644,9 @@ $(document).ready(function() {
     }
   };
 
-  //
-  // Reset board & shopping list.
-  //
+  /**
+   * Reset board & shopping list.
+   */
   $('.modal').modal();
 
   $('.modal-reset').on('click', function(e) {
@@ -637,14 +663,14 @@ $(document).ready(function() {
       });
   });
 
-  //
-  // Log out.
-  //
+  /**
+   * Log out.
+   */
   $('.log-out').on('click', function(e) {
     e.preventDefault();
     Trello.deauthorize();
-    localStorage.removeItem(LOCALSTORAGE_BOARD_ID);
-    localStorage.removeItem(LOCALSTORAGE_SHORT_URL);
+    removeItem(LOCALSTORAGE_BOARD_ID);
+    removeItem(LOCALSTORAGE_SHORT_URL);
     openAuthenticate();
   });
 
