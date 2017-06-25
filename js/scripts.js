@@ -311,6 +311,7 @@ $(document).ready(function() {
       this.$checklist = this.$board.find('.checklist');
       // Actions.
       this.$refreshBoard = $('.refresh-board');
+      this.$hideCheckedItems = $('.hide-checked-items');
       this.$openBoard = $('.open-board');
       this.$modal = $('.modal');
       this.$modalReset = $('.modal-reset');
@@ -704,6 +705,7 @@ $(document).ready(function() {
                     idCheckItem: item.id,
                     value: $(this).prop('checked')
                   });
+                  self.checkedItemShowHide(this);
                 });
               let $label = $('<label>')
                 .attr('for', item.id)
@@ -747,6 +749,18 @@ $(document).ready(function() {
         self.buildBoard();
       });
 
+      // Hide checked items.
+      this.$hideCheckedItems
+        .find('input')
+        .on('change', function() {
+          if ($(this).prop('checked')) {
+            self.hideCheckedItems();
+          }
+          else {
+            self.showCheckedItems();
+          }
+      });
+
       // Modal init.
       this.$modal.modal();
       // Reset board & shopping list.
@@ -772,10 +786,42 @@ $(document).ready(function() {
     }
 
     /**
+     * Show checked items.
+     */
+    showCheckedItems() {
+      this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeIn();
+    }
+
+    /**
+     * Hide checked items.
+     */
+    hideCheckedItems() {
+      this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeOut(500);
+    }
+
+    /**
+     * Hide or show a single checked item.
+     */
+    checkedItemShowHide(el) {
+      if ($(el).prop('checked') && this.shouldCheckedItemsBeHidden()) {
+        $(el).parent().stop().fadeOut(3000);
+      }
+      else {
+        $(el).closest('.checklist__item').stop().fadeIn();
+      }
+    }
+
+    /**
+     * Returns the value of the "checked items" checkbox.
+     */
+    shouldCheckedItemsBeHidden() {
+      return this.$hideCheckedItems.find('input').is(':checked');
+    }
+
+    /**
      * Set button that links to the Trello board.
      */
     setOpenBoardButton() {
-      let self = this;
       if (app.shortUrl) {
         this.$openBoard
           .removeClass('hide')

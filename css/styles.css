@@ -98,27 +98,3 @@ main {
 .recipes__item--highlighted {
   background-color: #ffffe0;
 }
-
-.checklist__item label,
-.extra-items__item label {
-  opacity: 0;
-  animation: fadeIn .5s linear forwards;
-}
-
-.extra-items__empty,
-.recipes__item,
-.recipes__title,
-.checklist__title,
-.extra-items__title,
-.authenticate,
-.create-board,
-.board {
-  opacity: 0;
-  animation: fadeIn .5s linear forwards;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
-}
