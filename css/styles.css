@@ -39,6 +39,10 @@ main {
   margin: 0;
 }
 
+.recipes__title {
+  margin-bottom: 10px;
+}
+
 .extra-items__actions {
   margin-top: 20px;
 }
@@ -130,7 +134,7 @@ main {
 .checklists.is-loading .checklist,
 .checklists.is-loading .recipes,
 .checklists.is-loading .checklist__actions {
-  display: none;
+  display: none !important; /* Override jQuery display style from the fadeOut method.. */
 }
 
 .checklist {

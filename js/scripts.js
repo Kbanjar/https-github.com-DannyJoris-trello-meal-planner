@@ -312,6 +312,7 @@ $(document).ready(function() {
       this.$noItems = this.$board.find('.no-items');
       this.$checklists = this.$board.find('.checklists');
       this.$checklist = this.$board.find('.checklist');
+      this.$checklistItems = this.$checklist.find('.checklist__items');
       // Actions.
       this.$turnOffShoppingMode = $('.turn-off-shopping-mode');
       this.$refreshBoard = $('.refresh-board');
@@ -580,6 +581,8 @@ $(document).ready(function() {
      */
     buildBoard() {
       let self = this;
+      // Reset board.
+      this.resetBoard();
       // Get lists.
       Trello.get(`/boards/${app.boardID}/lists`)
         .then(response => {
@@ -735,6 +738,22 @@ $(document).ready(function() {
     }
 
     /**
+     * Reset board.
+     */
+    resetBoard() {
+      let self = this;
+      this.$checklists.addClass('is-loading');
+      // Disable shopping mode if enabled.
+      if (this.isShoppingModeEnabled()) {
+        this.$shoppingMode.find('input').click();
+      }
+      this.$checklistItems.html('');
+      $.each(self.$checklist, function() {
+        self.updateCount($(this).attr('data-checklist-name'));
+      });
+    }
+
+    /**
      * Remove measurements from string to improve sorting.
      *
      * @param str
@@ -887,14 +906,16 @@ $(document).ready(function() {
       let duration = 3000;
       if ($(el).prop('checked') && this.isShoppingModeEnabled()) {
         $(el).parent().stop().fadeOut(duration);
-        this.shoppingModeHideChecklists(duration);
         setTimeout(function() {
-          self.checkMessages();
+          self.shoppingModeHideChecklists(500);
+          setTimeout(function() {
+            self.checkMessages();
+          }, 500);
         }, duration);
       }
       else {
+        $(el).closest('.checklist').stop().fadeIn(0);
         $(el).closest('.checklist__item').stop().fadeIn(0);
-        this.shoppingModeShowChecklists();
         this.hideMessages();
       }
     }
