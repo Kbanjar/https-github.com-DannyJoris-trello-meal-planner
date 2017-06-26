@@ -308,10 +308,14 @@ $(document).ready(function() {
       this.$createBoardProgress = this.$createBoard.find('.create-board__progress');
       // Board.
       this.$board = $('.board');
+      this.$shoppingCompleted = this.$board.find('.shopping-completed');
+      this.$noItems = this.$board.find('.no-items');
+      this.$checklists = this.$board.find('.checklists');
       this.$checklist = this.$board.find('.checklist');
       // Actions.
+      this.$turnOffShoppingMode = $('.turn-off-shopping-mode');
       this.$refreshBoard = $('.refresh-board');
-      this.$hideCheckedItems = $('.hide-checked-items');
+      this.$shoppingMode = $('.shopping-mode');
       this.$openBoard = $('.open-board');
       this.$modal = $('.modal');
       this.$modalReset = $('.modal-reset');
@@ -670,7 +674,6 @@ $(document).ready(function() {
               });
             });
           });
-          let $checklists = [];
           let checklistArray = $.map(app.checklist.preRender, (checklist, key) => {
             let checklistItems = checklist.items.sort((a, b) => {
               let nameA = a.name.toLowerCase(),
@@ -686,12 +689,10 @@ $(document).ready(function() {
             };
           }).sort((a, b) => a.pos > b.pos);
           $.each(checklistArray, (key, checklist) => {
+            let $checklistItems = [];
             if (checklist.items.length === 0) {
               return;
             }
-            $checklists.push($('<h2>')
-              .addClass('checklist__title')
-              .text(checklist.name));
             $.each(checklist.items, (key, item) => {
               let $input = $('<input>')
                 .attr('type', 'checkbox')
@@ -705,7 +706,8 @@ $(document).ready(function() {
                     idCheckItem: item.id,
                     value: $(this).prop('checked')
                   });
-                  self.checkedItemShowHide(this);
+                  self.checkedItemShoppingMode(this);
+                  self.updateCount(checklist.name);
                 });
               let $label = $('<label>')
                 .attr('for', item.id)
@@ -714,11 +716,19 @@ $(document).ready(function() {
                 .addClass('checklist__item')
                 .append($input)
                 .append($label);
-              $checklists.push($wrapper);
+              $checklistItems.push($wrapper);
             });
+            // Add to appropriate section.
+            $('.checklist[data-checklist-name="' + checklist.name + '"]')
+              .find('.checklist__items')
+              .html('')
+              .append($checklistItems);
+            self.updateCount(checklist.name);
           });
-          // Add to DOM.
-          self.$checklist.html('').append($checklists);
+          // Trigger shopping mode action.
+          self.triggerShoppingMode();
+          // Unhide the checklists.
+          self.$checklists.removeClass('is-loading');
           // Set the "Open board" button in the actions.
           self.setOpenBoardButton();
         });
@@ -739,6 +749,40 @@ $(document).ready(function() {
     }
 
     /**
+     * Update the checklist count.
+     */
+    updateCount(checklistName) {
+      let $checklist = $('.checklist[data-checklist-name="' + checklistName + '"]');
+      let total = $checklist.find('.checklist__item').length;
+      let checked = $checklist.find('input:checked').length;
+      $checklist.find('.checklist__count').text(checked + '/' + total);
+      if (total > 0 && total === checked) {
+        $checklist.find('.checklist__meta .material-icons')
+          .addClass('teal-text')
+          .removeClass('hide')
+          .end()
+          .find('.checklist__count')
+          .removeClass('grey-text')
+          .addClass('teal-text');
+      }
+      else {
+        $checklist.find('.checklist__meta .material-icons')
+          .addClass('hide')
+          .removeClass('teal-text')
+          .end()
+          .find('.checklist__count')
+          .removeClass('grey-text')
+          .removeClass('teal-text');
+      }
+      if (total === 0) {
+        $checklist.find('.checklist__meta').addClass('grey-text');
+      }
+      else {
+        $checklist.find('.checklist__meta').removeClass('grey-text');
+      }
+    }
+
+    /**
      * Bind Action elements.
      */
     bindActions() {
@@ -750,15 +794,22 @@ $(document).ready(function() {
       });
 
       // Hide checked items.
-      this.$hideCheckedItems
+      this.$shoppingMode
         .find('input')
         .on('change', function() {
           if ($(this).prop('checked')) {
-            self.hideCheckedItems();
+            self.enableShoppingMode(500);
           }
           else {
-            self.showCheckedItems();
+            self.disableShoppingMode();
           }
+      });
+
+      // Turn off shopping mode.
+      this.$turnOffShoppingMode.on('click', function() {
+        if (self.isShoppingModeEnabled()) {
+          self.$shoppingMode.find('input').click();
+        }
       });
 
       // Modal init.
@@ -786,36 +837,109 @@ $(document).ready(function() {
     }
 
     /**
-     * Show checked items.
+     * Hide messages.
      */
-    showCheckedItems() {
-      this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeIn();
+    hideMessages() {
+      this.$shoppingCompleted.addClass('hide');
+      this.$noItems.addClass('hide');
     }
 
     /**
-     * Hide checked items.
+     * Check if there's a message to be displayed.
      */
-    hideCheckedItems() {
-      this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeOut(500);
+    checkMessages() {
+      if (this.isShoppingModeEnabled()) {
+        let total = this.$checklists.find('.checklist__item').length;
+        let checked = this.$checklists.find('input:checked').length;
+        if (!total) {
+          this.$noItems.removeClass('hide');
+        }
+        if (total && total === checked) {
+          this.$shoppingCompleted.removeClass('hide');
+        }
+      }
     }
 
     /**
-     * Hide or show a single checked item.
+     * Disable shopping mode.
      */
-    checkedItemShowHide(el) {
-      if ($(el).prop('checked') && this.shouldCheckedItemsBeHidden()) {
-        $(el).parent().stop().fadeOut(3000);
+    disableShoppingMode() {
+      this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeIn(0);
+      this.shoppingModeShowChecklists();
+      this.hideMessages();
+    }
+
+    /**
+     * Enable shopping mode.
+     */
+    enableShoppingMode(duration) {
+      duration = duration || 0;
+      this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeOut(duration);
+      this.shoppingModeHideChecklists(duration);
+      this.checkMessages();
+    }
+
+    /**
+     * Checked item shopping mode.
+     */
+    checkedItemShoppingMode(el) {
+      let self = this;
+      let duration = 3000;
+      if ($(el).prop('checked') && this.isShoppingModeEnabled()) {
+        $(el).parent().stop().fadeOut(duration);
+        this.shoppingModeHideChecklists(duration);
+        setTimeout(function() {
+          self.checkMessages();
+        }, duration);
       }
       else {
-        $(el).closest('.checklist__item').stop().fadeIn();
+        $(el).closest('.checklist__item').stop().fadeIn(0);
+        this.shoppingModeShowChecklists();
+        this.hideMessages();
       }
     }
 
     /**
-     * Returns the value of the "checked items" checkbox.
+     * Trigger shopping mode action.
      */
-    shouldCheckedItemsBeHidden() {
-      return this.$hideCheckedItems.find('input').is(':checked');
+    triggerShoppingMode() {
+      if (this.isShoppingModeEnabled()) {
+        this.enableShoppingMode(0);
+      }
+      else {
+        this.disableShoppingMode();
+      }
+    }
+
+    /**
+     * Returns the value of the "Shopping mode" checkbox.
+     */
+    isShoppingModeEnabled() {
+      return this.$shoppingMode.find('input').is(':checked');
+    }
+
+    /**
+     * Shopping mode hide checklists.
+     */
+    shoppingModeHideChecklists(duration) {
+      let self = this;
+      $.each(self.$checklist, function() {
+        let total = $(this).find('.checklist__item').length;
+        let checked = $(this).find('input:checked').length;
+        if (!total || total === checked) {
+          $(this).stop().fadeOut(duration);
+        }
+      });
+    }
+
+    /**
+     * Shopping mode show checklists.
+     */
+    shoppingModeShowChecklists() {
+      let self = this;
+      $.each(self.$checklist, function() {
+        $(this).stop().fadeIn(0);
+      });
     }
 
     /**

@@ -15,7 +15,16 @@ main {
   padding: 15px;
 }
 
+.card {
+  min-height: 100vh;
+}
+
+.card .card-content--page-title {
+  padding-bottom: 0;
+}
+
 .page-title {
+  margin: 20px;
   font-size: 32px;
 }
 
@@ -26,7 +35,8 @@ main {
 .recipes__title,
 .checklist__title,
 .extra-items__title {
-  font-size: 20px;
+  font-size: 24px;
+  margin: 0;
 }
 
 .extra-items__actions {
@@ -97,4 +107,100 @@ main {
 .extra-items__item--highlighted,
 .recipes__item--highlighted {
   background-color: #ffffe0;
+}
+
+.shopping-mode {
+  margin-bottom: 25px;
+}
+
+.checklists {
+  min-height: 250px;
+}
+
+.checklists.is-loading .checklists__spinner {
+  display: block;
+}
+
+.checklists__spinner {
+  display: none;
+  width: 65px;
+  margin: 100px auto 0;
+}
+
+.checklists.is-loading .checklist,
+.checklists.is-loading .recipes,
+.checklists.is-loading .checklist__actions {
+  display: none;
+}
+
+.checklist {
+  margin-bottom: 25px;
+}
+
+.checklist__meta {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.checklist__title {
+  width: 100%;
+}
+
+.checklist__count {
+  margin-left: 5px;
+}
+
+.checklist__count i {
+  display: inline;
+}
+
+.checklist__items {
+  border-left: 5px solid #26a69a;
+  padding-left: 15px;
+}
+
+.checklist__add-extra-items {
+  display: none;
+  color: #cccccc;
+  cursor: pointer;
+}
+
+.shopping-completed {
+  text-align: center;
+  opacity: 0;
+  animation: fadeIn .5s linear forwards;
+}
+
+.shopping-completed__text {
+  font-size: 24px;
+}
+
+.shopping-completed .material-icons {
+  font-size: 50px;
+  vertical-align: bottom;
+}
+
+.no-items {
+  text-align: center;
+  opacity: 0;
+  animation: fadeIn .5s linear forwards;
+}
+
+.no-items__text {
+  font-size: 24px;
+}
+
+.no-items .material-icons {
+  font-size: 40px;
+  vertical-align: bottom;
+}
+
+.turn-off-shopping-mode {
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
 }

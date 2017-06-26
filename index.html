@@ -24,13 +24,19 @@
     <main>
       <div class="card">
         <div class="card__inner">
-          <div class="card-content center-align">
+          <div class="card-content center-align card-content--page-title">
             <h1 class="page-title">Trello Meal Planner</h1>
-            <div class="authenticate hide">
+          </div>
+          <!-- Authentication -->
+          <div class="authenticate hide">
+            <div class="card-content">
               <p class="authenticate__text">In order to use this app you need to authenticate with Trello.</p>
               <a class="waves-effect waves-light btn btn-large authenticate__link">Authenticate <img class="button-icon-trello" src="images/trello-mark-white.svg" /></a>
             </div>
-            <div class="create-board is-authenticated has-no-board hide">
+          </div>
+          <!-- Create board -->
+          <div class="create-board is-authenticated has-no-board hide">
+            <div class="card-content">
               <p class="create-board__text">If this is the first time using the Trello Meal Planning app, create a new board.</p>
               <a class="waves-effect waves-light btn btn-large create-board__link">Create new board</a>
               <div class="create-board__progress progress hide">
@@ -42,9 +48,12 @@
               </div>
             </div>
           </div>
+          <!-- Board -->
           <div class="board hide">
+            <!-- Board content -->
             <div class="card-content is-authenticated">
-              <form action="#" class="extra-items">
+              <!-- Extra Items -->
+              <form action="#" class="extra-items hide">
                 <h2 class="extra-items__title">Extra items</h2>
                 <div class="extra-items__list">
                   <div class="extra-items__checklist">
@@ -69,30 +78,133 @@
                   <a class="extra-items__save waves-effect waves-light btn" href="#">Save</a>
                 </div>
               </form>
-
-              <form action="#" class="checklists">
-                <div class="checklist"></div>
-                <div class="recipes">
-                  <h2 class="recipes__title">Recipes in this shopping list</h2>
-                  <div class="recipes__list collection hide"></div>
-                  <div class="recipes__empty hide"></div>
+              <!-- Checklists -->
+              <div class="checklists is-loading">
+                <!-- Loading spinner -->
+                <div class="checklists__spinner">
+                  <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-teal-only">
+                      <div class="circle-clipper left">
+                        <div class="circle"></div>
+                      </div><div class="gap-patch">
+                      <div class="circle"></div>
+                    </div><div class="circle-clipper right">
+                      <div class="circle"></div>
+                    </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="checklist__actions">
-                  <a class="waves-effect waves-light btn refresh-board" href="#"><i class="material-icons right">refresh</i>Refresh board</a>
+                <!-- Shopping complete -->
+                <div class="shopping-completed hide">
+                  <span class="shopping-completed__text">Shopping completed!</span>
+                  <i class="material-icons teal-text">done</i>
+                  <div>
+                    <a class="turn-off-shopping-mode grey-text">Turn off shopping mode.</a>
+                  </div>
                 </div>
-              </form>
+                <!-- No items -->
+                <div class="no-items hide">
+                  <span class="no-items__text">The shopping list is empty.</span>
+                  <i class="material-icons teal-text">info_outline</i>
+                  <div>
+                    <a class="turn-off-shopping-mode grey-text">Turn off shopping mode.</a>
+                  </div>
+                </div>
+                <!-- On hand -->
+                <div class="checklist" data-checklist-name="Things you probably have on hand">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Things you probably have on hand</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+                <!-- Produce -->
+                <div class="checklist" data-checklist-name="Fresh produce">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Fresh produce</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+                <!-- Dairy -->
+                <div class="checklist" data-checklist-name="Dairy & other refrigerated items">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Dairy & other refrigerated items</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+                <!-- Grains -->
+                <div class="checklist" data-checklist-name="Grains, legumes, pasta & bulk">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Grains, legumes, pasta & bulk</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+                <!-- Canned -->
+                <div class="checklist" data-checklist-name="Canned & jarred goods">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Canned & jarred goods</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+                <!-- Meat -->
+                <div class="checklist" data-checklist-name="Meat & alternatives">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Meat & alternatives</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+                <!-- Other -->
+                <div class="checklist" data-checklist-name="Everything else">
+                  <div class="checklist__meta grey-text">
+                    <h2 class="checklist__title">Everything else</h2>
+                    <i class="material-icons hide">done</i>
+                    <div class="checklist__count">0/0</div>
+                  </div>
+                  <div class="checklist__items"></div>
+                  <a class="checklist__add-extra-items">Add extra items...</a>
+                </div>
+              </div>
             </div>
-
+            <div class="card-content">
+              <!-- Recipes -->
+              <div class="recipes">
+                <h2 class="recipes__title">Recipes in this shopping list</h2>
+                <div class="recipes__list collection hide"></div>
+                <div class="recipes__empty hide"></div>
+              </div>
+              <div class="checklist__actions">
+                <a class="waves-effect waves-light btn refresh-board" href="#">
+                  <i class="material-icons right">refresh</i>Refresh board</a>
+              </div>
+            </div>
+            <!-- Actions -->
             <div class="card-action is-authenticated">
               <ul>
                 <li class="right-align">
-                  <div class="switch hide-checked-items">
-                    Checked items:
+                  <div class="switch shopping-mode">
+                    Shopping mode:&nbsp;&nbsp;
                     <label>
-                      show
+                      off
                       <input type="checkbox">
                       <span class="lever"></span>
-                      hide
+                      on
                     </label>
                   </div>
                 </li>
@@ -100,7 +212,6 @@
                   <a class="waves-effect waves-light btn open-board hide" href="#">Open board <img class="button-icon-trello" src="images/trello-mark-white.svg" alt="Trello logo"/></a>
                 </li>
                 <li class="right-align">
-                  <!-- Modal Trigger -->
                   <a class="modal-trigger waves-effect waves-light btn reset-board" href="#modal1">Reset Board</a>
                 </li>
                 <li class="right-align">
@@ -112,7 +223,7 @@
         </div>
       </div>
     </main>
-    <!-- Modal Structure -->
+    <!-- Modal -->
     <div id="modal1" class="modal">
       <div class="modal-content">
         <h4>Reset Board & Shopping List?</h4>
@@ -123,7 +234,7 @@
         <a href="#!" class="modal-action modal-close waves-effect waves-green btn btn-flat modal-reset">Reset</a>
       </div>
     </div>
-
+    <!-- Footer scripts -->
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
     <script type="text/javascript" src="js/scripts.js"></script>
