@@ -118,6 +118,8 @@ main {
 }
 
 .checklists {
+  display: inline-block;
+  width: 100%;
   min-height: 250px;
 }
 
@@ -158,14 +160,8 @@ main {
   display: inline;
 }
 
-.checklist__items {
-  border-left: 5px solid #26a69a;
-  padding-left: 15px;
-}
-
-.checklist__add-extra-items {
-  display: none;
-  color: #cccccc;
+.extra-items__add {
+  color: #cccccc  ;
   cursor: pointer;
 }
 

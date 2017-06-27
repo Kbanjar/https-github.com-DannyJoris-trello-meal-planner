@@ -17,6 +17,7 @@ $(document).ready(function() {
   const LOCALSTORAGE_RECIPES_LIST_ID = 'recipesListID';
   const LOCALSTORAGE_MONDAY_LIST_ID = 'mondayListID';
   const LOCALSTORAGE_TEMPLATE_CARD_ID = 'templateCardID';
+  const LOCALSTORAGE_EXTRA_ITEMS_CARD_ID = 'extraItemsCardID';
   const LOCALSTORAGE_ALLOWED_LIST_IDS = 'allowedListIDs';
   const LOCALSTORAGE_EXTRA_ITEMS = 'extraItems';
   // Other.
@@ -43,6 +44,8 @@ $(document).ready(function() {
     {name: "Saturday", pos: 7},
     {name: "Sunday", pos: 8},
   ];
+  const DEFAULT_EXTRA_ITEMS_NAME = 'Extra items';
+  const DEFAULT_EXTRA_ITEMS_DESC = 'Card to list extra shopping items that are not part of any recipe.';
   const DEFAULT_RECIPE_NAME = 'Cremini and chard stuffed shells';
   const DEFAULT_RECIPE_DESC = 'Vegetarian stuffed shells filled with ricotta cheese, cremini mushrooms, and Swiss chard.';
   const DEFAULT_RECIPE_URL = 'http://ohmyveggies.com/recipe-cremini-and-chard-stuffed-shells/';
@@ -278,7 +281,6 @@ $(document).ready(function() {
       this.getTrelloClient()
         .done(() => self.trelloAuthenticate())
         .fail(() => console.error('Failed to load Trello client.'));
-      this.bindActions();
     }
 
     /**
@@ -313,6 +315,7 @@ $(document).ready(function() {
       this.$checklists = this.$board.find('.checklists');
       this.$checklist = this.$board.find('.checklist');
       this.$checklistItems = this.$checklist.find('.checklist__items');
+      this.$extraItems = this.$checklists.find('.extra-items');
       // Actions.
       this.$turnOffShoppingMode = $('.turn-off-shopping-mode');
       this.$refreshBoard = $('.refresh-board');
@@ -443,7 +446,10 @@ $(document).ready(function() {
       let self = this;
       if (getItem(LOCALSTORAGE_BOARD_ID)) {
         Trello.get(`/board/${getItem(LOCALSTORAGE_BOARD_ID)}`)
-          .done(() => self.open('board'))
+          .done(() => {
+            self.open('board')
+            self.bindActions();
+          })
           .fail(() => self.open('create-board'));
       }
       else {
@@ -456,14 +462,16 @@ $(document).ready(function() {
      */
     createBoard() {
       let self = this;
-      // Create board API call.
       this.startBoardProgress();
       this.boardProgress(0);
+      // Create board.
       Trello.post('/boards', {
         name: DEFAULT_BOARD_NAME,
         defaultLabels: false,
         defaultLists: false
-      }).then(response => {
+      })
+      // Add labels and lists.
+      .then(response => {
         self.boardProgress(15);
         console.log('Board created');
         app.boardID = setItem(LOCALSTORAGE_BOARD_ID, response.id);
@@ -477,85 +485,93 @@ $(document).ready(function() {
         });
         return $.when.apply($, deferreds)
       })
-        .then(() => {
-          self.boardProgress(30);
-          console.log('Labels & lists added');
-          // Add example card.
-          return Trello.get(`/boards/${app.boardID}/lists`)
-        })
-        .then(response => {
-          self.boardProgress(50);
-          $.each(response, (key, list) => {
-            if (list.name === 'Recipes') {
-              app.recipesListID = setItem(LOCALSTORAGE_RECIPES_LIST_ID, list.id);
-            }
-            if (list.name === 'Monday') {
-              app.mondayListID = setItem(LOCALSTORAGE_MONDAY_LIST_ID, list.id);
-            }
-          });
-          return Trello.post('/cards/', {
-            name: 'RECIPE TEMPLATE',
-            idList: app.recipesListID
-          });
-        })
-        .then(response => {
-          self.boardProgress(60);
-          app.templateCardID = setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, response.id);
-
-          // Add checklists.
-          return Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
-        })
-        .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_PRODUCE}))
-        .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_DAIRY}))
-        .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_GRAINS}))
-        .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_CANNED}))
-        .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_MEAT}))
-        .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_OTHER}))
-        .then(() => Trello.post('/cards/', {
-          name: DEFAULT_RECIPE_NAME,
-          desc: DEFAULT_RECIPE_DESC,
-          idList: app.mondayListID,
-          idCardSource: app.templateCardID
-        }))
-        .then(response => {
-          self.boardProgress(70);
-          app.recipeCardID = response.id;
-          return Trello.post(`/cards/${response.id}/attachments`, {
-            url: DEFAULT_RECIPE_URL
-          });
-        })
-        .then(() => Trello.get(`/boards/${app.boardID}/labels`))
-        .then(response => {
-          let red = $.grep(response, label => label.color === 'red')[0];
-          return Trello.post(`/cards/${app.recipeCardID}/idLabels`, { value: red.id });
-        })
-        .then(() => Trello.get(`/boards/${app.boardID}/checklists`))
-        .then((response) => {
-          self.boardProgress(80);
-          let ingredients = $.map(DEFAULT_RECIPE_INGREDIENTS, function(el, i) {
-            let checklistID = $.grep(response, checklist => checklist.name === el.checklistName && checklist.idCard === app.recipeCardID)[0].id;
-            return Object.assign({} , el, {
-              checklistID: checklistID
-            });
-          });
-          let deferreds = [];
-          $.each(ingredients, (key, ingredient) => {
-            deferreds.push(Trello.post(`/cards/${app.recipeCardID}/checklist/${ingredient.checklistID}/checkItem`, {
-              idChecklist: ingredient.checklistID,
-              name: ingredient.name
-            }));
-          });
-          return $.when.apply($, deferreds);
-        })
-        .then(() => {
-          self.boardProgress(100);
-          console.log('Create board completed');
-          setTimeout(() => {
-            self.endBoardProgress();
-            self.$createBoardLink.removeClass('disabled');
-            self.open('board');
-          }, 500);
+      // Get lists.
+      .then(() => {
+        self.boardProgress(30);
+        console.log('Labels & lists added');
+        return Trello.get(`/boards/${app.boardID}/lists`)
+      })
+      // Add recipe template card.
+      .then(response => {
+        self.boardProgress(50);
+        $.each(response, (key, list) => {
+          if (list.name === 'Recipes') {
+            app.recipesListID = setItem(LOCALSTORAGE_RECIPES_LIST_ID, list.id);
+          }
+          if (list.name === 'Monday') {
+            app.mondayListID = setItem(LOCALSTORAGE_MONDAY_LIST_ID, list.id);
+          }
         });
+        return Trello.post('/cards/', {
+          name: 'RECIPE TEMPLATE',
+          idList: app.recipesListID
+        });
+      })
+      // Add checklists.
+      .then(response => {
+        self.boardProgress(60);
+        app.templateCardID = setItem(LOCALSTORAGE_TEMPLATE_CARD_ID, response.id);
+        return Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_ON_HAND});
+      })
+      .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_PRODUCE}))
+      .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_DAIRY}))
+      .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_GRAINS}))
+      .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_CANNED}))
+      .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_MEAT}))
+      .then(() => Trello.post(`/cards/${app.templateCardID}/checklists`, {value: null, name: CHECKLIST_OTHER}))
+      // Create Extra Items card.
+      .then(() => self.createExtraItemsCard())
+      // Create default recipe card.
+      .then(() => Trello.post('/cards/', {
+        name: DEFAULT_RECIPE_NAME,
+        desc: DEFAULT_RECIPE_DESC,
+        idList: app.mondayListID,
+        idCardSource: app.templateCardID
+      }))
+      // Add URL to default recipe card.
+      .then(response => {
+        self.boardProgress(70);
+        app.recipeCardID = response.id;
+        return Trello.post(`/cards/${response.id}/attachments`, {
+          url: DEFAULT_RECIPE_URL
+        });
+      })
+      // Add the red "mains" label to the default recipe card.
+      .then(() => Trello.get(`/boards/${app.boardID}/labels`))
+      .then(response => {
+        let red = $.grep(response, label => label.color === 'red')[0];
+        return Trello.post(`/cards/${app.recipeCardID}/idLabels`, { value: red.id });
+      })
+      // Add ingredients to the default recipe card.
+      .then(() => Trello.get(`/boards/${app.boardID}/checklists`))
+      .then((response) => {
+        self.boardProgress(80);
+        // Add checklist ID to ingredients list.
+        let ingredients = $.map(DEFAULT_RECIPE_INGREDIENTS, function(el, i) {
+          let checklistID = $.grep(response, checklist => checklist.name === el.checklistName && checklist.idCard === app.recipeCardID)[0].id;
+          return Object.assign({} , el, {
+            checklistID: checklistID
+          });
+        });
+        let deferreds = [];
+        $.each(ingredients, (key, ingredient) => {
+          deferreds.push(Trello.post(`/cards/${app.recipeCardID}/checklist/${ingredient.checklistID}/checkItem`, {
+            idChecklist: ingredient.checklistID,
+            name: ingredient.name
+          }));
+        });
+        return $.when.apply($, deferreds);
+      })
+      // Complete board creation process.
+      .then(() => {
+        self.boardProgress(100);
+        console.log('Create board completed');
+        setTimeout(() => {
+          self.endBoardProgress();
+          self.$createBoardLink.removeClass('disabled');
+          self.open('board');
+        }, 500);
+      });
     }
 
     /**
@@ -574,6 +590,103 @@ $(document).ready(function() {
 
     endBoardProgress() {
       this.$createBoardProgress.addClass('hide');
+    }
+
+    /**
+     * Create Extra Items card.
+     */
+    createExtraItemsCard() {
+      let self = this;
+      let recipesListID = getItem(LOCALSTORAGE_RECIPES_LIST_ID);
+      let templateCardID = getItem(LOCALSTORAGE_TEMPLATE_CARD_ID);
+      if (recipesListID && templateCardID) {
+        return Trello.post('/cards/', {
+          name: DEFAULT_EXTRA_ITEMS_NAME,
+          desc: DEFAULT_EXTRA_ITEMS_DESC,
+          idList: recipesListID,
+          idCardSource: templateCardID
+        })
+        .then(response => {
+          app.extraItemsCardID = setItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID, response.id);
+          // Get old extra items from localStorage.
+          let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
+          if (extraItems) {
+            // There's old extra items in localStorage, add them to the
+            // "Everything else" checklist.
+            return Trello.get(`/cards/${response.id}/checklists`)
+              .then(response => {
+                // Find "Everything else" checklist.
+                let otherItemsID = $.grep(response, checklist => checklist.name === CHECKLIST_OTHER)[0].id;
+                let deferreds = [];
+                // Add items to the checklist.
+                $.each(extraItems, (key, item) => {
+                  deferreds.push(Trello.post(`/cards/${app.extraItemsCardID}/checklist/${otherItemsID}/checkItem`, {
+                    idChecklist: otherItemsID,
+                    name: item.value
+                  }).then((response) => {
+                    let itemID = response.id;
+                    // PUT /1/cards/[card id or shortlink]/checklist/[idChecklistCurrent]/checkItem/[idCheckItem]
+                    return Trello.put(`/cards/${app.extraItemsCardID}/checklist/${otherItemsID}/checkItem/${itemID}`, {
+                      idChecklistCurrent: otherItemsID,
+                      idCheckItem: itemID,
+                      state: item.checked
+                    });
+                  }));
+                });
+                return $.when.apply($, deferreds);
+              })
+              .then(() => {
+                // Remove extraItems localStorage.
+                removeItem(LOCALSTORAGE_EXTRA_ITEMS);
+                return self.getExtraItemsCard();
+              });
+          }
+          else {
+            return response;
+          }
+        });
+      }
+      else {
+        console.error('Recipes list ID and/or template card ID not found.');
+      }
+    }
+
+    /**
+     * Get Extra Items card.
+     */
+    getExtraItemsCard() {
+      let self = this;
+      let extraItemsCardID = getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID);
+      if (extraItemsCardID) {
+        return Trello.get(`/boards/${app.boardID}/cards/${extraItemsCardID}`, {
+          idCard: extraItemsCardID
+        })
+        .fail(error => {
+          console.error('error', error);
+          if (error.status === 404 && error.responseText === 'Could not find the card') {
+            return self.createExtraItemsCard();
+          }
+        });
+      }
+      else {
+        // ID not found in localstorage, so do a search by card title.
+        return Trello.get(`/boards/${app.boardID}/cards`, {fields: ['name']})
+          // Filter by card name.
+          .then(response => response.filter(card => card.name === DEFAULT_EXTRA_ITEMS_NAME))
+          .then(response => {
+            if (response.length) {
+              // Store Extra Items card ID and call this function again.
+              app.extraItemsCardID = setItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID, response[0].id);
+              return Trello.get(`/boards/${app.boardID}/cards/${extraItemsCardID}`, {
+                idCard: extraItemsCardID
+              });
+            }
+            else {
+              // Create Extra Items card.
+              return self.createExtraItemsCard();
+            }
+          });
+      }
     }
 
     /**
@@ -600,8 +713,11 @@ $(document).ready(function() {
           setItem(LOCALSTORAGE_ALLOWED_LIST_IDS, JSON.stringify(app.checklist.allowedListIDs));
           return app.checklist.allowedListIDs;
         })
+        // Get all cards.
         .then(response => Trello.get(`/boards/${app.boardID}/cards`, {fields: ['name', 'idList', 'idChecklist']}))
+        // Filter the cards to only get ones from allowed "weekday" lists.
         .then(response => response.filter(card => app.checklist.allowedListIDs.indexOf(card.idList) != -1))
+        // Populate recipes list.
         .then(response => {
           app.checklist.recipes = response;
           let recipes = [];
@@ -650,6 +766,7 @@ $(document).ready(function() {
           }
           return response;
         })
+        // Get all checklists from "weekday" cards.
         .then(response => {
           let deferreds = [];
           app.checklist.checklists = [];
@@ -660,6 +777,7 @@ $(document).ready(function() {
           });
           return $.when.apply($, deferreds);
         })
+        // Prepare, sort and render ingredients.
         .then(() => {
           app.checklist.preRender = {};
           $.each(app.checklist.checklists, (key, card) => {
@@ -884,6 +1002,7 @@ $(document).ready(function() {
      */
     disableShoppingMode() {
       this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeIn(0);
+      this.$extraItems.stop().fadeIn(0);
       this.shoppingModeShowChecklists();
       this.hideMessages();
     }
@@ -894,6 +1013,7 @@ $(document).ready(function() {
     enableShoppingMode(duration) {
       duration = duration || 0;
       this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeOut(duration);
+      this.$extraItems.stop().fadeOut(duration);
       this.shoppingModeHideChecklists(duration);
       this.checkMessages();
     }
