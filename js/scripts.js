@@ -443,7 +443,6 @@ $(document).ready(function() {
                     name: item.value
                   }).then((response) => {
                     let itemID = response.id;
-                    // PUT /1/cards/[card id or shortlink]/checklist/[idChecklistCurrent]/checkItem/[idCheckItem]
                     return Trello.put(`/cards/${app.extraItemsCardID}/checklist/${otherItemsID}/checkItem/${itemID}`, {
                       idChecklistCurrent: otherItemsID,
                       idCheckItem: itemID,
@@ -475,16 +474,17 @@ $(document).ready(function() {
     getExtraItemsCard() {
       let self = this;
       let extraItemsCardID = getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID);
-      if (extraItemsCardID) {
-        return Trello.get(`/boards/${app.boardID}/cards/${extraItemsCardID}`, {
-          idCard: extraItemsCardID
-        })
-        .fail(error => {
-          console.error('error', error);
-          if (error.status === 404 && error.responseText === 'Could not find the card') {
-            return self.createExtraItemsCard();
-          }
-        });
+      if (extraItemsCardID !== null) {
+          return Trello.get(`/boards/${app.boardID}/cards/${extraItemsCardID}`, {
+            idCard: extraItemsCardID
+          })
+          // .fail() can't return a new promise:
+          // https://stackoverflow.com/a/19253671/477949
+          .then(undefined, error => {
+            if (error.status === 404 && error.responseText === 'Could not find the card') {
+              return self.createExtraItemsCard();
+            }
+          });
       }
       else {
         // ID not found in localstorage, so do a search by card title.
@@ -495,8 +495,8 @@ $(document).ready(function() {
             if (response.length) {
               // Store Extra Items card ID and call this function again.
               app.extraItemsCardID = setItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID, response[0].id);
-              return Trello.get(`/boards/${app.boardID}/cards/${extraItemsCardID}`, {
-                idCard: extraItemsCardID
+              return Trello.get(`/boards/${app.boardID}/cards/${app.extraItemsCardID}`, {
+                idCard: app.extraItemsCardID
               });
             }
             else {
@@ -514,8 +514,10 @@ $(document).ready(function() {
       let self = this;
       // Reset board.
       this.resetBoard();
+      // Start off by making sure we include an Extra Items card.
+      this.getExtraItemsCard()
       // Get lists.
-      Trello.get(`/boards/${app.boardID}/lists`)
+        .then(() => Trello.get(`/boards/${app.boardID}/lists`))
         .then(response => {
           app.checklist = {};
           app.checklist.allowedListNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
