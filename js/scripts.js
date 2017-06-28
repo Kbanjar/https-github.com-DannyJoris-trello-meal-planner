@@ -88,186 +88,6 @@ $(document).ready(function() {
   };
 
   /**
-   * Extra items class.
-   */
-  class ExtraItems {
-    constructor() {
-      this.setSelectors();
-      this.bindElements();
-      // Why is this here?
-      this.updateExtraItemsList();
-    }
-
-    /**
-     * Set selectors.
-     */
-    setSelectors() {
-      this.$extraItemsList = $('.extra-items__list');
-      this.$extraItemsChecklist = $('.extra-items__checklist');
-      this.$extraItemsTextarea = $('#extra-items__textarea');
-      this.$extraItemsInput = $('.extra-items__input');
-      this.$extraItemsEdit = $('.extra-items__edit');
-      this.$extraItemsCancel = $('.extra-items__cancel');
-      this.$extraItemsSave = $('.extra-items__save');
-    }
-
-    /**
-     * Bind elements.
-     */
-    bindElements() {
-      this.bindExtraItemsCheckbox();
-      this.bindExtraItemsEdit();
-      this.bindExtraItemsCancel();
-      this.bindExtraItemsSave();
-    }
-
-    /**
-     * Bind extra item checkbox change.
-     */
-    bindExtraItemsCheckbox()  {
-      this.$extraItemsList.find(':checkbox').each((key, value) => {
-        $(value).on('change', function(e) {
-          e.preventDefault();
-          let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
-          extraItems[key].checked = $(this).is(':checked');
-          setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItems));
-        });
-      });
-    }
-
-    /**
-     * Populate extra items.
-     *
-     * [
-     *   {
-     *     value: 'Extra item',
-     *     checked: true
-     *   }
-     * ]
-     */
-    updateExtraItemsList() {
-      let self = this;
-      if (!getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
-        this.$extraItemsChecklist
-          .html('')
-          .append($('<p></p>')
-            .addClass('extra-items__empty')
-            .text('No extra items yet.')
-            .on('click', function(e) {
-              e.preventDefault();
-              self.toggleExtraItems();
-              self.updateExtraItemsTextarea();
-            }));
-      } else {
-        // Populate checklist.
-        this.$extraItemsChecklist.empty();
-        let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
-        $.each(extraItems, (key, item) => {
-          let $checkbox = $('<div></div>')
-            .addClass('extra-items__item')
-            .append(`<input type="checkbox" class="filled-in" id="extra-item__item-${key}" ${item.checked ? 'checked="checked"': ""}/>`)
-            .append(`<label for="extra-item__item-${key}">${item.value}</label>`);
-          self.$extraItemsChecklist.append($checkbox);
-        });
-        this.bindExtraItemsCheckbox();
-      }
-    }
-
-    /**
-     * Update extra items textarea.
-     */
-    updateExtraItemsTextarea() {
-      if (!getItem(LOCALSTORAGE_EXTRA_ITEMS)) {
-        this.$extraItemsTextarea.val('');
-      }
-      else {
-        let value = '';
-        let extraItems = JSON.parse(getItem(LOCALSTORAGE_EXTRA_ITEMS));
-        $.each(extraItems, (key, item) => {
-          if (item.checked) {
-            value += '- [x] ';
-          }
-          else {
-            value += '- [ ] ';
-          }
-          value += item.value + '\n';
-        });
-        this.$extraItemsTextarea.val(value);
-      }
-    }
-
-    /**
-     * Toggle extra items.
-     */
-    toggleExtraItems() {
-      let self = this;
-      this.$extraItemsInput.toggleClass('hide');
-      this.$extraItemsList.toggleClass('hide');
-      // Autoresize and focus.
-      if (!this.$extraItemsInput.hasClass('hide')) {
-        setTimeout(() => {
-          self.$extraItemsTextarea.trigger('autoresize').focus();
-        }, 100);
-      }
-    }
-
-    /**
-     * Extra items edit.
-     */
-    bindExtraItemsEdit() {
-      let self = this;
-      this.$extraItemsEdit.on('click', function(e) {
-        e.preventDefault();
-        self.toggleExtraItems();
-        self.updateExtraItemsTextarea();
-      });
-    }
-
-    /**
-     * Extra items cancel.
-     */
-    bindExtraItemsCancel() {
-      let self = this;
-      this.$extraItemsCancel.on('click', function(e) {
-        e.preventDefault();
-        self.toggleExtraItems();
-      });
-    }
-
-    /**
-     * Extra items save.
-     */
-    bindExtraItemsSave() {
-      let self = this;
-      this.$extraItemsSave.on('click', function(e) {
-        e.preventDefault();
-        // Store in localStorage.
-        let values = self.$extraItemsTextarea.val().trim();
-        if (values) {
-          values = values.split(/\r?\n/);
-          let extraItemsStorage = values.map((item) => {
-            let checked = false;
-            if (item.match(/^(- \[x])+/)) {
-              checked = true;
-            }
-            return {
-              value: item.replace(/^(- \[x])/, '').replace(/^[^A-Za-z0-9]+/, ''),
-              checked: checked
-            }
-          });
-          setItem(LOCALSTORAGE_EXTRA_ITEMS, JSON.stringify(extraItemsStorage));
-        }
-        else {
-          setItem(LOCALSTORAGE_EXTRA_ITEMS, '');
-        }
-        self.toggleExtraItems();
-        self.updateExtraItemsList();
-      });
-    }
-
-  }
-
-  /**
    * Meal planner class.
    */
   class MealPlanner {
@@ -287,8 +107,6 @@ $(document).ready(function() {
      * Set variables.
      */
     setVariables() {
-      // Extra Items.
-      this.extraItems = new ExtraItems();
       // Get stored values.
       app.boardID = getItem(LOCALSTORAGE_BOARD_ID);
       app.shortUrl = getItem(LOCALSTORAGE_SHORT_URL);
@@ -714,9 +532,13 @@ $(document).ready(function() {
           return app.checklist.allowedListIDs;
         })
         // Get all cards.
-        .then(response => Trello.get(`/boards/${app.boardID}/cards`, {fields: ['name', 'idList', 'idChecklist']}))
+        .then(response => Trello.get(`/boards/${app.boardID}/cards`, {
+          fields: ['name', 'idList', 'idChecklist']
+        }))
         // Filter the cards to only get ones from allowed "weekday" lists.
-        .then(response => response.filter(card => app.checklist.allowedListIDs.indexOf(card.idList) != -1))
+        .then(response => response.filter(card => {
+          return app.checklist.allowedListIDs.indexOf(card.idList) != -1 || card.id === getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID);
+        }))
         // Populate recipes list.
         .then(response => {
           app.checklist.recipes = response;
@@ -726,22 +548,24 @@ $(document).ready(function() {
               .attr('href', '#')
               .addClass('recipes__item')
               .addClass('collection-item')
-              .data('id', recipe.id)
+              .attr('data-card-id', recipe.id)
               .text(recipe.name)
               .on('click', function(e) {
                 e.preventDefault();
                 if ($(this).hasClass('active')) {
+                  // Disable highlight.
                   $(this).removeClass('active');
                   $('.checklist__item').removeClass('checklist__item--highlighted');
                 }
                 else {
+                  // Enable highlight.
                   $('.recipes__item').removeClass('active');
                   $(this).addClass('active');
-                  let id = $(this).data('id');
+                  let id = $(this).attr('data-card-id');
                   $('.checklist__item')
                     .removeClass('checklist__item--highlighted')
                     .each(function() {
-                      if ($(this).find('input').data('idCard') == id) {
+                      if ($(this).find('input').attr('data-card-id') == id) {
                         $(this).addClass('checklist__item--highlighted');
                       }
                     });
@@ -766,7 +590,7 @@ $(document).ready(function() {
           }
           return response;
         })
-        // Get all checklists from "weekday" cards.
+        // Get all checklists from "weekday" and Extra Items cards.
         .then(response => {
           let deferreds = [];
           app.checklist.checklists = [];
@@ -815,28 +639,8 @@ $(document).ready(function() {
               return;
             }
             $.each(checklist.items, (key, item) => {
-              let $input = $('<input>')
-                .attr('type', 'checkbox')
-                .addClass('filled-in')
-                .attr('id', item.id)
-                .data('idCard', item.idCard)
-                .prop('checked', () => item.state == 'complete')
-                .on('change', function() { // For some reason () => {} breaks the "this" variable.
-                  Trello.put(`/cards/${item.idCard}/checklist/${item.idChecklist}/checkItem/${item.id}/state`, {
-                    idChecklist: item.idChecklist,
-                    idCheckItem: item.id,
-                    value: $(this).prop('checked')
-                  });
-                  self.checkedItemShoppingMode(this);
-                  self.updateCount(checklist.name);
-                });
-              let $label = $('<label>')
-                .attr('for', item.id)
-                .text(item.name);
-              let $wrapper = $('<div></div>')
-                .addClass('checklist__item')
-                .append($input)
-                .append($label);
+              // Create checklist item.
+              let $wrapper = self.createChecklistItem(item, checklist.name);
               $checklistItems.push($wrapper);
             });
             // Add to appropriate section.
@@ -846,6 +650,8 @@ $(document).ready(function() {
               .append($checklistItems);
             self.updateCount(checklist.name);
           });
+          // Bind extra items.
+          self.bindExtraItems();
           // Trigger shopping mode action.
           self.triggerShoppingMode();
           // Unhide the checklists.
@@ -869,6 +675,45 @@ $(document).ready(function() {
       $.each(self.$checklist, function() {
         self.updateCount($(this).attr('data-checklist-name'));
       });
+    }
+
+    /**
+     * Create checklist item.
+     *
+     * @param {object} item
+     *   Checklist item object. Needs to contain: id, idCard, state, idChecklist
+     *   and name properties.
+     * @param {string} checklistName
+     *   Human readable name of the checklist.
+     */
+    createChecklistItem(item, checklistName) {
+      let self = this;
+      let $input = $('<input>')
+        .attr('type', 'checkbox')
+        .addClass('filled-in')
+        .attr('id', item.id)
+        .attr('data-card-id', item.idCard)
+        .prop('checked', () => item.state == 'complete')
+        .on('change', function() {
+          Trello.put(`/cards/${item.idCard}/checklist/${item.idChecklist}/checkItem/${item.id}/state`, {
+            idChecklist: item.idChecklist,
+            idCheckItem: item.id,
+            value: $(this).prop('checked')
+          });
+          self.checkedItemShoppingMode(this);
+          self.updateCount(checklistName);
+        });
+      let $label = $('<label>')
+        .attr('for', item.id)
+        .text(item.name);
+      let $checklistItem = $('<div></div>')
+        .addClass('checklist__item')
+        .append($input)
+        .append($label);
+      if (item.idCard === getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID)) {
+        $checklistItem.addClass('checklist__item--extra-items');
+      }
+      return $checklistItem;
     }
 
     /**
@@ -917,6 +762,124 @@ $(document).ready(function() {
       else {
         $checklist.find('.checklist__meta').removeClass('grey-text');
       }
+    }
+
+    /**
+     * Bind extra items.
+     */
+    bindExtraItems() {
+      let self = this;
+      app.extraItemsCardID = getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID);
+      // Extra items add.
+      $('.extra-items__add').on('click', function(e) {
+        e.preventDefault();
+        let $extraItemsInput = $(this).addClass('hide')
+          .siblings('.extra-items__input')
+          .removeClass('hide');
+        setTimeout(() => {
+          $extraItemsInput.find('textarea').trigger('autoresize').focus();
+        }, 100);
+      });
+
+      // Extra items cancel.
+      $('.extra-items__cancel').on('click', function(e) {
+        e.preventDefault();
+        $(this).closest('.extra-items__input')
+          .addClass('hide')
+          .find('textarea')
+          .val('')
+          .closest('.extra-items')
+          .find('.extra-items__add')
+          .removeClass('hide');
+      });
+
+      // Extra items save.
+      $('.extra-items__save').on('click', function(e) {
+        e.preventDefault();
+        let $save = $(this);
+        let $checklist = $(this).closest('.checklist');
+        let $checklistItems = $checklist.find('.checklist__items');
+        let checklistName = $checklist.attr('data-checklist-name');
+        let $textarea = $(this).siblings('.input-field').find('textarea');
+        let values = $textarea.val().trim();
+        let checklistItems = [];
+        if (values) {
+          values = values.split(/\r?\n/);
+          checklistItems = values.map((item) => {
+            let checked = false;
+            if (item.match(/^(- \[x])+/)) {
+              checked = true;
+            }
+            let value = item.replace(/^(- \[x])/, '').replace(/^[^A-Za-z0-9]+/, '');
+            if (value) {
+              return {
+                value: value,
+                checked: checked
+              }
+            }
+          }).filter(item => typeof item === 'object');
+          let total = checklistItems.length;
+          let count = 0;
+          $checklist.find('.progress')
+            .stop()
+            .fadeIn(0)
+            .removeClass('hide');
+          Trello.get(`/cards/${app.extraItemsCardID}/checklists`)
+            .then(response => {
+              let checklistID = $.grep(response, checklist => checklist.name === checklistName)[0].id;
+              let deferreds = [];
+              $.each(checklistItems, (key, item) => {
+                deferreds.push(Trello.post(`/cards/${app.extraItemsCardID}/checklist/${checklistID}/checkItem`, {
+                  idChecklist: checklistID,
+                  name: item.value
+                }).then((response) => {
+                  let itemID = response.id;
+                  return Trello.put(`/cards/${app.extraItemsCardID}/checklist/${checklistID}/checkItem/${itemID}`, {
+                    idChecklistCurrent: checklistID,
+                    idCheckItem: itemID,
+                    state: item.checked
+                  });
+                }).then(response => {
+                    let $wrapper = self.createChecklistItem(response, checklistName);
+                    $checklistItems.append($wrapper);
+                    let progress = Math.round((++count / total) * 100);
+                    $checklist.find('.progress')
+                      .find('.determinate')
+                      .css('width', `${progress}%`);
+                    if (count === total) {
+                      setTimeout(function() {
+                        $checklist.find('.progress').stop().fadeOut(500, function() {
+                          $(this).addClass('hide')
+                            .find('.determinate')
+                            .css('width', '0');
+                        });
+                      }, 200);
+                    }
+                }));
+              });
+              $.when.apply($, deferreds).done(() => {
+                // Update count.
+                self.updateCount(checklistName);
+                // Close textarea.
+                $save.closest('.extra-items__input')
+                  .addClass('hide')
+                  .find('textarea')
+                  .val('')
+                  .closest('.extra-items')
+                  .find('.extra-items__add')
+                  .removeClass('hide');
+              });
+            });
+        }
+        // Close textarea.
+        $(this).closest('.extra-items__input')
+          .addClass('hide')
+          .find('textarea')
+          .val('')
+          .closest('.extra-items')
+          .find('.extra-items__add')
+          .removeClass('hide');
+      });
     }
 
     /**

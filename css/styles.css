@@ -28,48 +28,7 @@ main {
   font-size: 32px;
 }
 
-.create-board__select {
-  margin-top: 35px;
-}
-
-.recipes__title,
-.checklist__title,
-.extra-items__title {
-  font-size: 24px;
-  margin: 0;
-}
-
-.recipes__title {
-  margin-bottom: 10px;
-}
-
-.extra-items__actions {
-  margin-top: 20px;
-}
-
-.checklist__actions {
-  margin-top: 30px;
-  margin-bottom: 10px;
-}
-
-.extra-items__empty {
-  cursor: pointer;
-}
-
-.extra-items__empty:hover {
-  background-color: #ffffe0;
-}
-
-.button-icon-trello {
-  position: relative;
-  top: 4px;
-  left: 7px;
-  width: 20px;
-}
-
-.card-action > ul > li {
-  margin-bottom: 15px;
-}
+/* Authenticate. */
 
 .authenticate {
   margin-top: 30px;
@@ -80,9 +39,12 @@ main {
   margin-bottom: 35px;
 }
 
+/* Create board. */
+
 .create-board {
   margin-top: 30px;
   padding-bottom: 45px;
+  text-align: center;
 }
 
 .card .card-content p.create-board__text {
@@ -93,6 +55,48 @@ main {
   margin-top: 65px;
 }
 
+.create-board__select {
+  margin-top: 35px;
+}
+
+.recipes__title {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+}
+
+/* Extra items. */
+
+.extra-items {
+  margin-top: 10px;
+}
+
+.extra-items__add {
+  color: #cccccc  ;
+  cursor: pointer;
+}
+
+.extra-items__actions {
+  margin-top: 20px;
+}
+
+.extra-items__empty {
+  cursor: pointer;
+}
+
+.extra-items__empty:hover {
+  background-color: #ffffe0;
+}
+
+.extra-items__input .input-field {
+  margin-top: 0;
+}
+
+.extra-items__input textarea {
+  padding-top: 0;
+}
+
+/* Checkboxes. */
+
 [type="checkbox"].filled-in:checked+label:before,
 [type="checkbox"].filled-in:checked+label:after,
 [type="checkbox"].filled-in+label:before,
@@ -100,11 +104,6 @@ main {
 [type="checkbox"].filled-in:not(:checked)+label:before,
 [type="checkbox"].filled-in:not(:checked)+label:after {
   top: 3px;
-}
-
-.checklist__item,
-.extra-items__item {
-  margin-bottom: 3px;
 }
 
 .checklist__item--highlighted,
@@ -116,6 +115,8 @@ main {
 .shopping-mode {
   margin-bottom: 25px;
 }
+
+/* Checklists. */
 
 .checklists {
   display: inline-block;
@@ -139,17 +140,21 @@ main {
   display: none !important; /* Override jQuery display style from the fadeOut method.. */
 }
 
+/* Checklist. */
+
 .checklist {
   margin-bottom: 25px;
+}
+
+.checklist__title {
+  width: 100%;
+  font-size: 24px;
+  margin: 0;
 }
 
 .checklist__meta {
   display: flex;
   margin-bottom: 20px;
-}
-
-.checklist__title {
-  width: 100%;
 }
 
 .checklist__count {
@@ -160,10 +165,27 @@ main {
   display: inline;
 }
 
-.extra-items__add {
-  color: #cccccc  ;
-  cursor: pointer;
+.checklist__item {
+  margin-bottom: 3px;
 }
+
+.checklist__actions {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+.button-icon-trello {
+  position: relative;
+  top: 4px;
+  left: 7px;
+  width: 20px;
+}
+
+.card-action > ul > li {
+  margin-bottom: 15px;
+}
+
+/* "Shopping completed" message. */
 
 .shopping-completed {
   text-align: center;
@@ -179,6 +201,8 @@ main {
   font-size: 50px;
   vertical-align: bottom;
 }
+
+/* "No items" message. */
 
 .no-items {
   text-align: center;
@@ -198,6 +222,8 @@ main {
 .turn-off-shopping-mode {
   cursor: pointer;
 }
+
+/* Keyframe definitions. */
 
 @keyframes fadeIn {
   to {
