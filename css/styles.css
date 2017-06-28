@@ -33,6 +33,7 @@ main {
 .authenticate {
   margin-top: 30px;
   padding-bottom: 45px;
+  text-align: center;
 }
 
 .card .card-content p.authenticate__text {

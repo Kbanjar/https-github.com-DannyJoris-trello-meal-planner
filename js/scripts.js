@@ -265,7 +265,7 @@ $(document).ready(function() {
       if (getItem(LOCALSTORAGE_BOARD_ID)) {
         Trello.get(`/board/${getItem(LOCALSTORAGE_BOARD_ID)}`)
           .done(() => {
-            self.open('board')
+            self.open('board');
             self.bindActions();
           })
           .fail(() => self.open('create-board'));
@@ -924,7 +924,7 @@ $(document).ready(function() {
         $.each(app.checklist.recipes, (key, recipe) => {
           deferreds.push(Trello.put(`/cards/${recipe.id}/idList`, { value: app.recipesListID }));
         });
-        // Aplly and refresh board.
+        // Apply and refresh board.
         $.when.apply($, deferreds)
           .done(() => self.$refreshBoard.click());
       });
