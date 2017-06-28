@@ -264,10 +264,7 @@ $(document).ready(function() {
       let self = this;
       if (getItem(LOCALSTORAGE_BOARD_ID)) {
         Trello.get(`/board/${getItem(LOCALSTORAGE_BOARD_ID)}`)
-          .done(() => {
-            self.open('board');
-            self.bindActions();
-          })
+          .done(() => self.open('board'))
           .fail(() => self.open('create-board'));
       }
       else {
@@ -388,6 +385,7 @@ $(document).ready(function() {
           self.endBoardProgress();
           self.$createBoardLink.removeClass('disabled');
           self.open('board');
+          self.bindActions();
         }, 500);
       });
     }
