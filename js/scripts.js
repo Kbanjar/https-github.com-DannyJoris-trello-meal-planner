@@ -385,7 +385,6 @@ $(document).ready(function() {
           self.endBoardProgress();
           self.$createBoardLink.removeClass('disabled');
           self.open('board');
-          self.bindActions();
         }, 500);
       });
     }
@@ -654,6 +653,11 @@ $(document).ready(function() {
           self.bindExtraItems();
           // Trigger shopping mode action.
           self.triggerShoppingMode();
+          // Bind actions only once.
+          if (!app.actionsBound) {
+            self.bindActions();
+            app.actionsBound = true;
+          }
           // Unhide the checklists.
           self.$checklists.removeClass('is-loading');
           // Set the "Open board" button in the actions.
