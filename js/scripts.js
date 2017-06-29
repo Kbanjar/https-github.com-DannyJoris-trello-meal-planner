@@ -134,13 +134,15 @@ $(document).ready(function() {
       this.$checklist = this.$board.find('.checklist');
       this.$checklistItems = this.$checklist.find('.checklist__items');
       this.$extraItems = this.$checklists.find('.extra-items');
+      this.$modalRemove = $('#modal-remove-item').find('.modal-remove');
       // Actions.
       this.$turnOffShoppingMode = $('.turn-off-shopping-mode');
       this.$refreshBoard = $('.refresh-board');
       this.$shoppingMode = $('.shopping-mode');
       this.$openBoard = $('.open-board');
       this.$modal = $('.modal');
-      this.$modalReset = $('.modal-reset');
+      this.$modalReset = $('#modal-reset-board').find('.modal-reset');
+      this.$resetBoard = $('.reset-board');
       this.$logOut = $('.log-out');
     }
 
@@ -720,6 +722,21 @@ $(document).ready(function() {
         .append($label);
       if (item.idCard === getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID)) {
         $checklistItem.addClass('checklist__item--extra-items');
+        let $delete = $('<a></a>').addClass('checklist__item-delete')
+          .attr('href', '#modal-remove-item')
+          .append('<i class="material-icons grey-text">delete</i>')
+          .on('click', function(e) {
+            e.preventDefault();
+            $('#modal-remove-item')
+              .find('.modal__remove-item')
+              .text(item.name)
+              .end()
+              .find('.modal-remove')
+              .attr('data-card-id', item.idCard)
+              .attr('data-checklist-item-id', item.id)
+              .attr('data-checklist-name', checklistName);
+          });
+        $checklistItem.prepend($delete);
       }
       return $checklistItem;
     }
@@ -928,12 +945,15 @@ $(document).ready(function() {
       });
 
       // Modal init.
-      this.$modal.modal();
+      this.$modal.modal({
+        inDuration: 200,
+        outDuration: 150
+      });
       // Reset board & shopping list.
       this.$modalReset.on('click', function(e) {
         e.preventDefault();
         // Disable button and add spinner.
-        $('.reset-board')
+        self.$resetBoard
           .addClass('disabled')
           .find('.reset-board__text')
           .text('Resetting board')
@@ -971,7 +991,7 @@ $(document).ready(function() {
         .done(() => {
           self.$refreshBoard.click();
           // Reset button.
-          $('.reset-board')
+          self.$resetBoard
             .removeClass('disabled')
             .find('.reset-board__text')
             .text('Reset board')
@@ -980,6 +1000,24 @@ $(document).ready(function() {
             .removeClass('active')
             .addClass('hide');
         });
+      });
+      // Remove item.
+      this.$modalRemove.on('click', function(e) {
+        e.preventDefault();
+        let cardID = $(this).attr('data-card-id');
+        let checklistItemID = $(this).attr('data-checklist-item-id');
+        let checklistName = $(this).attr('data-checklist-name');
+        if (cardID && checklistItemID && checklistName) {
+          Trello.delete(`/cards/${cardID}/checkItem/${checklistItemID}`, { idCheckItem: checklistItemID })
+            .done(() => {
+              self.$modalRemove.removeAttr('data-card-id')
+                .removeAttr('data-checklist-item-id')
+                .removeAttr('data-checklist-name');
+              $('.modal__remove-item').empty();
+              $(`#${checklistItemID}`).closest('.checklist__item').remove();
+              self.updateCount(checklistName);
+            })
+        }
       });
 
       // Logout.
@@ -1020,6 +1058,7 @@ $(document).ready(function() {
       this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeIn(0);
       this.$extraItems.stop().fadeIn(0);
       this.shoppingModeShowChecklists();
+      $('.checklist__item-delete').stop().fadeIn(0);
       this.hideMessages();
     }
 
@@ -1031,6 +1070,7 @@ $(document).ready(function() {
       this.$checklist.find('input:checked').closest('.checklist__item').stop().fadeOut(duration);
       this.$extraItems.stop().fadeOut(duration);
       this.shoppingModeHideChecklists(duration);
+      $('.checklist__item-delete').stop().fadeOut(duration);
       this.checkMessages();
     }
 

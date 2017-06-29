@@ -170,6 +170,18 @@ main {
   margin-bottom: 3px;
 }
 
+.checklist__item label {
+  width: calc(100% - 30px);
+}
+
+.checklist__item-delete {
+  float: right;
+}
+
+.checklist__item-delete i {
+  font-size: 20px
+}
+
 .checklist__actions {
   margin-top: 30px;
   margin-bottom: 10px;
@@ -236,6 +248,12 @@ main {
 
 .spinner-disabled, .spinner-disabled-only {
   border-color: #9F9F9F;
+}
+
+/* Modal */
+
+.modal__remove-item {
+  font-weight: bold;
 }
 
 /* Keyframe definitions. */

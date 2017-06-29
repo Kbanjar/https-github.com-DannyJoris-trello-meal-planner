@@ -277,7 +277,7 @@
                   <a class="waves-effect waves-light btn open-board hide" href="#">Open board <img class="button-icon-trello" src="images/trello-mark-white.svg" alt="Trello logo"/></a>
                 </li>
                 <li class="right-align">
-                  <a class="modal-trigger waves-effect waves-light btn reset-board" href="#modal1">
+                  <a class="modal-trigger waves-effect waves-light btn reset-board" href="#modal-reset-board">
                     <span class="reset-board__text">Reset board</span>
                     <div class="preloader-wrapper tiny hide">
                       <div class="spinner-layer spinner-disabled-only">
@@ -301,8 +301,8 @@
         </div>
       </div>
     </main>
-    <!-- Modal -->
-    <div id="modal1" class="modal">
+    <!-- Board reset modal -->
+    <div id="modal-reset-board" class="modal">
       <div class="modal-content">
         <h4>Reset Board & Shopping List?</h4>
         <p>This action will move all recipe cards back into the recipe column, and clear the shopping list. Recipe card ingredients will be unchecked, and "extra items" will be removed.</p>
@@ -310,6 +310,17 @@
       <div class="modal-footer">
         <a href="#!" class="modal-action modal-close waves-effect waves-red btn btn-flat modal-cancel">Cancel</a>
         <a href="#!" class="modal-action modal-close waves-effect waves-green btn btn-flat modal-reset">Reset</a>
+      </div>
+    </div>
+    <!-- Remove item modal -->
+    <div id="modal-remove-item" class="modal">
+      <div class="modal-content">
+        <h4>Remove item</h4>
+        <p>Are you sure you want to remove "<span class="modal__remove-item"></span>"?</p>
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-action modal-close waves-effect waves-red btn btn-flat modal-cancel">Cancel</a>
+        <a href="#!" class="modal-action modal-close waves-effect waves-green btn btn-flat modal-remove">Remove</a>
       </div>
     </div>
     <!-- Footer scripts -->
