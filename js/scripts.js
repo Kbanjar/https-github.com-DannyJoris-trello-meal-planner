@@ -511,6 +511,8 @@ $(document).ready(function() {
       let self = this;
       // Reset board.
       this.resetBoard();
+      // Scroll to top.
+      $('html, body').animate({ scrollTop: 0 }, 300);
       // Start off by making sure we include an Extra Items card.
       this.getExtraItemsCard()
       // Get lists.
@@ -662,6 +664,8 @@ $(document).ready(function() {
           self.$checklists.removeClass('is-loading');
           // Set the "Open board" button in the actions.
           self.setOpenBoardButton();
+          // Enable button again.
+          self.$refreshBoard.removeClass('disabled');
         });
     }
 
@@ -836,29 +840,32 @@ $(document).ready(function() {
                 deferreds.push(Trello.post(`/cards/${app.extraItemsCardID}/checklist/${checklistID}/checkItem`, {
                   idChecklist: checklistID,
                   name: item.value
-                }).then((response) => {
+                })
+                .then((response) => {
                   let itemID = response.id;
                   return Trello.put(`/cards/${app.extraItemsCardID}/checklist/${checklistID}/checkItem/${itemID}`, {
                     idChecklistCurrent: checklistID,
                     idCheckItem: itemID,
                     state: item.checked
                   });
-                }).then(response => {
-                    let $wrapper = self.createChecklistItem(response, checklistName);
-                    $checklistItems.append($wrapper);
-                    let progress = Math.round((++count / total) * 100);
-                    $checklist.find('.progress')
-                      .find('.determinate')
-                      .css('width', `${progress}%`);
-                    if (count === total) {
-                      setTimeout(function() {
-                        $checklist.find('.progress').stop().fadeOut(500, function() {
-                          $(this).addClass('hide')
-                            .find('.determinate')
-                            .css('width', '0');
-                        });
-                      }, 200);
-                    }
+                })
+                .then(response => {
+                  response.idCard = app.extraItemsCardID;
+                  let $wrapper = self.createChecklistItem(response, checklistName);
+                  $checklistItems.append($wrapper);
+                  let progress = Math.round((++count / total) * 100);
+                  $checklist.find('.progress')
+                    .find('.determinate')
+                    .css('width', `${progress}%`);
+                  if (count === total) {
+                    setTimeout(function() {
+                      $checklist.find('.progress').stop().fadeOut(500, function() {
+                        $(this).addClass('hide')
+                          .find('.determinate')
+                          .css('width', '0');
+                      });
+                    }, 200);
+                  }
                 }));
               });
               $.when.apply($, deferreds).done(() => {
@@ -894,6 +901,7 @@ $(document).ready(function() {
       // Refresh board.
       this.$refreshBoard.on('click', function(e) {
         e.preventDefault();
+        $(this).addClass('disabled');
         self.buildBoard();
       });
 
@@ -907,6 +915,9 @@ $(document).ready(function() {
           else {
             self.disableShoppingMode();
           }
+          setTimeout(function() {
+            $('html, body').animate({ scrollTop: 0 }, 300);
+          }, 300);
       });
 
       // Turn off shopping mode.
@@ -921,6 +932,17 @@ $(document).ready(function() {
       // Reset board & shopping list.
       this.$modalReset.on('click', function(e) {
         e.preventDefault();
+        // Disable button and add spinner.
+        $('.reset-board')
+          .addClass('disabled')
+          .find('.reset-board__text')
+          .text('Resetting board')
+          .end()
+          .find('.preloader-wrapper')
+          .addClass('active')
+          .removeClass('hide');
+        // Set board to loading state.
+        self.$checklists.addClass('is-loading');
         // Uncheck all checked items.
         $('.checklist__item input:checked').click();
         // Remove extra items from card.
@@ -945,8 +967,19 @@ $(document).ready(function() {
           });
           return $.when.apply($, deferreds);
         })
-        // Refresh board.
-        .done(() => self.$refreshBoard.click());
+        // Refresh board & scroll to top.
+        .done(() => {
+          self.$refreshBoard.click();
+          // Reset button.
+          $('.reset-board')
+            .removeClass('disabled')
+            .find('.reset-board__text')
+            .text('Reset board')
+            .end()
+            .find('.preloader-wrapper')
+            .removeClass('active')
+            .addClass('hide');
+        });
       });
 
       // Logout.

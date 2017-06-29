@@ -224,6 +224,20 @@ main {
   cursor: pointer;
 }
 
+/* Actions */
+
+.reset-board .preloader-wrapper.tiny {
+  width: 20px;
+  height: 20px;
+  vertical-align: top;
+  margin-top: 8px;
+  margin-left: 10px;
+}
+
+.spinner-disabled, .spinner-disabled-only {
+  border-color: #9F9F9F;
+}
+
 /* Keyframe definitions. */
 
 @keyframes fadeIn {
