@@ -45,7 +45,7 @@ $(document).ready(function() {
     {name: "Sunday", pos: 8},
   ];
   const DEFAULT_EXTRA_ITEMS_NAME = 'Extra items';
-  const DEFAULT_EXTRA_ITEMS_DESC = 'Card to list extra shopping items that are not part of any recipe.';
+  const DEFAULT_EXTRA_ITEMS_DESC = 'Card to list extra shopping items that are not part of any recipe. Unlike recipe cards, this card will be included in the shopping list no matter which Trello list it is in.';
   const DEFAULT_RECIPE_NAME = 'Cremini and chard stuffed shells';
   const DEFAULT_RECIPE_DESC = 'Vegetarian stuffed shells filled with ricotta cheese, cremini mushrooms, and Swiss chard.';
   const DEFAULT_RECIPE_URL = 'http://ohmyveggies.com/recipe-cremini-and-chard-stuffed-shells/';
