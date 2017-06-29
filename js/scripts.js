@@ -923,14 +923,30 @@ $(document).ready(function() {
         e.preventDefault();
         // Uncheck all checked items.
         $('.checklist__item input:checked').click();
-        // Move cards back into recipes list.
-        let deferreds = [];
-        $.each(app.checklist.recipes, (key, recipe) => {
-          deferreds.push(Trello.put(`/cards/${recipe.id}/idList`, { value: app.recipesListID }));
+        // Remove extra items from card.
+        let extraItemsCardID = getItem(LOCALSTORAGE_EXTRA_ITEMS_CARD_ID);
+        let templateCardID = getItem(LOCALSTORAGE_TEMPLATE_CARD_ID);
+        let extraItemIDs = $('.checklist__item--extra-items').find('input').map(function() {
+          return $(this).attr('id');
         });
-        // Apply and refresh board.
+        let deferreds = [];
+        $.each(extraItemIDs, (key, id) => {
+          deferreds.push(Trello.delete(`/cards/${extraItemsCardID}/checkItem/${id}`, { idCheckItem: id }));
+        });
         $.when.apply($, deferreds)
-          .done(() => self.$refreshBoard.click());
+        // Move Template and Extra Items cards up in the list.
+        .then(() => Trello.put(`/cards/${extraItemsCardID}/pos`, { value: 'top' }))
+        .then(() => Trello.put(`/cards/${templateCardID}/pos`, { value: 'top' }))
+        // Move cards back into recipes list.
+        .then(() => {
+          let deferreds = [];
+          $.each(app.checklist.recipes, (key, recipe) => {
+            deferreds.push(Trello.put(`/cards/${recipe.id}/idList`, { value: app.recipesListID }));
+          });
+          return $.when.apply($, deferreds);
+        })
+        // Refresh board.
+        .done(() => self.$refreshBoard.click());
       });
 
       // Logout.
