@@ -5,7 +5,7 @@
   "dir": "ltr",
   "start_url": "index.html",
   "display": "standalone",
-  ​​"orientation": "portrait-primary",
+  "orientation": "portrait-primary",
   "background_color": "#80cbc4",
   "theme_color": "#80cbc4",
   "description": "A little app that creates a Meal Planner Trello board and generates shopping lists.",
